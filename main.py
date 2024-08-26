@@ -4,7 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Dispatcher
 
 from bot import bot
-from check import check_pay
+from check import check_pay, check_link
 
 from handlers import start_handler, handler_buy, other_handler, for_admin
 
@@ -25,6 +25,7 @@ async def main():
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_pay, 'cron', hour=0, minute=0)
+    scheduler.add_job(check_link, 'cron', hour=0, minute=0)
     scheduler.start()
 
     # Регистриуем роутеры в диспетчере
