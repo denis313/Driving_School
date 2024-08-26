@@ -2,8 +2,17 @@ import logging
 
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.exc import IntegrityError
-from database.model import Base, Users
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+from bot import bot
+from config import admin_id
+from database.model import Base, Users, Links
+from lexicon import lexicon
+
+
+async def check(status: bool):
+    d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
+    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]))
 
 
 class DatabaseManager:
@@ -18,20 +27,26 @@ class DatabaseManager:
 
     # add new user
     async def add_user(self, user_data):
-        async with self.async_session() as session:
-            new_user = Users(**user_data)
-            session.add(new_user)
-            await session.commit()
-            logging.debug(f'New user')
+        try:
+            async with self.async_session() as session:
+                new_user = Users(**user_data)
+                session.add(new_user)
+                await session.commit()
+                logging.debug(f'New user added with id: {new_user.user_id}')
+                return new_user  # Возвращаем объект нового пользователя
+        except IntegrityError:
+            logging.debug(f'User with data {user_data} already exists')
+            return None  # Возвращаем None, если пользователь уже существует
+        except SQLAlchemyError as e:
+            logging.error(f'Error occurred while adding user: {str(e)}')
 
     # get user
     async def get_user(self, user_id):
-
         async with self.async_session() as session:
             result = await session.execute(select(Users).where(Users.user_id == user_id))
             user = result.scalar()
             logging.debug(f'Get user by id={user_id}')
-            return user
+            return user if user else None
 
     # get all users
     async def get_users(self):
@@ -57,4 +72,39 @@ class DatabaseManager:
             await session.commit()
             logging.debug(f'Delete user by id={user_id}')
 
+    async def add_link(self, link):
+        try:
+            async with self.async_session() as session:
+                new_links = Links(**link)
+                session.add(new_links)
+                await session.commit()
+                logging.debug('New link')
+        except SQLAlchemyError as e:
+            logging.error(f'Error occurred while adding user: {str(e)}')
 
+    async def get_link(self, status):
+        async with self.async_session() as session:
+            result = await session.execute(select(Links).where(Links.status == status))
+            link = result.scalar()
+            logging.debug('Get link')
+            await check(status=status)
+            return link if link else None
+
+    async def delete_link(self, link_id):
+        async with self.async_session() as session:
+            stmt = delete(Links).where(Links.id_link == link_id)
+            await session.execute(stmt)
+            await session.commit()
+            logging.debug(f'Delete link by id={link_id}')
+
+    async def get_links(self, status: bool):
+        try:
+            async with self.async_session() as session:
+                result = await session.execute(select(Users).where(Links.status == status))
+                all_links = result.scalars()
+                links = [link for link in all_links]
+                return links
+        except SQLAlchemyError as e:
+            logging.error(f'Error occurred while adding user: {str(e)}')
+            await check(status=status)
+            return None

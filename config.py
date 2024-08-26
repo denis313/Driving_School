@@ -21,7 +21,7 @@ def load_config(path: str | None = None) -> Config:
 def admin_id(path: str | None = None) -> str:
     env = environs.Env()
     env.read_env(path)
-    id_admin = env('admins_id')
+    id_admin = env('admin_id')
     return id_admin
 
 
@@ -32,8 +32,8 @@ def db_config(path: str | None = None) -> str:
     return url
 
 
-def provider_token(path: str | None = None) -> str:
+def provider_token_yookassa(path: str | None = None) -> str:
     env = environs.Env()
     env.read_env(path)
-    token = env('provider_token')
+    token = env('provider_token_yookassa')
     return token

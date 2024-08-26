@@ -1,10 +1,11 @@
 import logging
+import json
 from datetime import timedelta, date
 
 from aiogram import F, Router, Bot
 from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery
 
-from config import admin_id, db_config, provider_token
+from config import admin_id, db_config, provider_token_yookassa
 from database.requests import DatabaseManager
 from lexicon import lexicon
 
@@ -15,23 +16,44 @@ dsn = db_config()
 db_manager = DatabaseManager(dsn=dsn)
 
 
-@router.callback_query()
+@router.callback_query(F.data.in_({'yookassa', 'yookassa_parts'}))
 async def buy_subscribe(callback: CallbackQuery, bot: Bot):
     user = await db_manager.get_user(user_id=callback.from_user.id)
-    if not user or user.subscription_status is False:
+    if not user or user.status is False:
+        if callback.data == 'yookassa':
+            price = 450 - user.total
+        elif callback.data == 'yookassa_parts':
+            price = 90
         await bot.send_invoice(
             chat_id=callback.from_user.id,
             need_name=True,
             need_email=True,
             need_phone_number=True,
-            title='Подписка на канал',
-            description='Подписка на платный закрытый канал',
-            provider_token=provider_token(),
+            send_email_to_provider=True,
+            send_phone_number_to_provider=True,
+            title='Оплата обучения',
+            description='Оплата обучения в автошколе "Космос"',
+            provider_token=provider_token_yookassa(),
             currency='RUB',
-            payload='buy_subscribe',
+            payload=str(price),
             start_parameter='text',
+            provider_data=json.dumps({
+                "receipt": {
+                    "items": [
+                        {
+                            "description": "Оплата обучения в автошколе 'Космос'",
+                            "quantity": "1",
+                            "amount": {
+                                "value": f"{price}",  # Сумма в рублях
+                                "currency": "RUB"
+                            },
+                            "vat_code": 1
+                        }
+                    ]
+                }
+            }),
             prices=[
-                LabeledPrice(label="rub", amount=300 * 100)
+                LabeledPrice(label="rub", amount=price * 100)
             ]
         )
     else:
@@ -41,31 +63,33 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
 @router.pre_checkout_query()
 async def process_pre_check(pre_checkout_query: PreCheckoutQuery, bot: Bot):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-    logging.debug('pre_checkout_query', pre_checkout_query)
 
 
 @router.message(F.successful_payment)
 async def successful_payment_handler(message: Message, bot: Bot):
-    start_date = date.today()
-    end_date = start_date + timedelta(days=5)
-    successful_payment = message.successful_payment
     user = await db_manager.get_user(user_id=message.from_user.id)
-    await message.answer('🟢 Поздравляю! Подписка успешно подключена!')
-    if user:
-        await db_manager.update_user(user_id=message.from_user.id, user_data={'subscription_status': True,
-                                                                              'subscription_start_date': start_date,
-                                                                              'subscription_end_date': end_date})
+    successful_payment = message.successful_payment
+    if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450:
+        start_date = date.today()
+        end_date = start_date + timedelta(days=2)
+        total = user.total + int(message.successful_payment.invoice_payload)
+        await db_manager.update_user(user_id=message.from_user.id, user_data={'total': total,
+                                                                              'start_date': start_date,
+                                                                              'end_date': end_date})
+        await message.answer(f'🟢 Оплата прошла, вы уже выплатили {total}')
     else:
-        await db_manager.add_user(user_data={'user_id': message.from_user.id,
-                                             'telegram_id': message.from_user.id,
-                                             'username': successful_payment.order_info.name,
-                                             'subscription_status': True,
-                                             'subscription_start_date': start_date,
-                                             'subscription_end_date': end_date})
-        await message.answer(lexicon['link'].format(subscription_start_date=start_date.strftime('%d-%m-%y'),
-                                                    subscription_end_date=end_date.strftime('%d-%m-%y')))
-        await bot.send_message(chat_id=int(admin_id()),
-                               text=lexicon['new_user'].format(user_full_name=successful_payment.order_info.name,
-                                                               user_id=message.from_user.id,
-                                                               user_email=successful_payment.order_info.email,
-                                                               user_phone=successful_payment.order_info.phone_number))
+        await db_manager.update_user(user_id=message.from_user.id, user_data={'status': True,
+                                                                              'total': 45000,
+                                                                              'start_date': None,
+                                                                              'end_date': None})
+        await message.answer('🟢 Поздравляю!\n'
+                             'Обучение оплачено полностью❤️')
+    if user.reg is False:
+        await bot.send_message(chat_id=admin_id(),
+                           text=lexicon['for_admin_3'].format(user_name=successful_payment.order_info.name,
+                                                              user_id=message.from_user.id,
+                                                              user_email=successful_payment.order_info.email,
+                                                              user_phone=successful_payment.order_info.phone_number))
+        await db_manager.update_user(user_id=message.from_user.id, user_data={'reg': True})
+        await message.answer('🟢 Поздравляю! Оплата прошла!\n'
+                             'Ожидайте сообщение на почту, с вашими данными для обучения📩')
