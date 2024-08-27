@@ -2,7 +2,7 @@ from aiogram import Router, Bot, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State, default_state
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 
 from config import db_config
 from database.requests import DatabaseManager
@@ -18,10 +18,14 @@ db_manager = DatabaseManager(dsn=dsn)
 
 @router.callback_query(CallbackFactory.filter())
 async def payments(callback: CallbackQuery, callback_data: CallbackFactory, bot: Bot):
-    await bot.edit_message_text(chat_id=callback_data.user_id,
-                                message_id=callback_data.mg,
-                                text=lexicon['buy'],
-                                reply_markup=keyboard_buy())
+    await bot.edit_message_media(
+        chat_id=callback_data.user_id,
+        message_id=callback_data.mg,
+        media=InputMediaPhoto(
+            media="AgACAgIAAxkBAAEUSORmzhPYYRENasJzgMsyHaeCu6v_SQACsOIxG2hucEo8ld5QEOW9PAEAAwIAA3kAAzUE",
+            caption=lexicon['buy']
+        ),
+        reply_markup=keyboard_buy())
     await callback.message.answer('Возможность оплатить предоставлена✅')
 
 
