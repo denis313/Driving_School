@@ -21,9 +21,9 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if not user or user.status is False:
         if callback.data == 'yookassa':
-            price = 450 - user.total
+            cost = 450 - user.total # total = 25000
         elif callback.data == 'yookassa_parts':
-            price = 90
+            cost = 90 # cost = 5000
         await bot.send_invoice(
             chat_id=callback.from_user.id,
             need_name=True,
@@ -35,7 +35,7 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
             description='Оплата обучения в автошколе "Космос"',
             provider_token=provider_token_yookassa(),
             currency='RUB',
-            payload=str(price),
+            payload=str(cost),  # Указываем сумму в копейках в payload
             start_parameter='text',
             provider_data=json.dumps({
                 "receipt": {
@@ -44,7 +44,7 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
                             "description": "Оплата обучения в автошколе 'Космос'",
                             "quantity": "1",
                             "amount": {
-                                "value": f"{price}",  # Сумма в рублях
+                                "value": f"{cost}",  # Сумма в рублях с двумя знаками после запятой
                                 "currency": "RUB"
                             },
                             "vat_code": 1
@@ -53,7 +53,7 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
                 }
             }),
             prices=[
-                LabeledPrice(label="rub", amount=price * 100)
+                LabeledPrice(label="rub", amount=cost*100)
             ]
         )
     else:
@@ -69,7 +69,7 @@ async def process_pre_check(pre_checkout_query: PreCheckoutQuery, bot: Bot):
 async def successful_payment_handler(message: Message, bot: Bot):
     user = await db_manager.get_user(user_id=message.from_user.id)
     successful_payment = message.successful_payment
-    if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450:
+    if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450: # successfull = 5000 user_total + 5000 != 25000
         start_date = date.today()
         end_date = start_date + timedelta(days=2)
         total = user.total + int(message.successful_payment.invoice_payload)
@@ -79,7 +79,7 @@ async def successful_payment_handler(message: Message, bot: Bot):
         await message.answer(f'🟢 Оплата прошла, вы уже выплатили {total}')
     else:
         await db_manager.update_user(user_id=message.from_user.id, user_data={'status': True,
-                                                                              'total': 45000,
+                                                                              'total': 25000,
                                                                               'start_date': None,
                                                                               'end_date': None})
         await message.answer('🟢 Поздравляю!\n'
