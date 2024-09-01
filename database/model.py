@@ -19,6 +19,10 @@ class Users(Base):
     doc: Mapped[str] = mapped_column(nullable=True)
     reg = mapped_column(Boolean, default=False)
     adult = mapped_column(Boolean)
+    buy = mapped_column(Boolean, default=False)
+    email: Mapped[str] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(nullable=True)
+    phone: Mapped[str] = mapped_column(nullable=True)
     start_date = mapped_column(Date)
     end_date = mapped_column(Date)
 

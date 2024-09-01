@@ -90,6 +90,9 @@ async def successful_payment_handler(message: Message, bot: Bot):
                                                               user_id=message.from_user.id,
                                                               user_email=successful_payment.order_info.email,
                                                               user_phone=successful_payment.order_info.phone_number))
-        await db_manager.update_user(user_id=message.from_user.id, user_data={'reg': True})
+        await db_manager.update_user(user_id=message.from_user.id, user_data={'reg': True,
+                                                                              'name': successful_payment.order_info.name,
+                                                                              'email': successful_payment.order_info.email,
+                                                                              'phone': successful_payment.order_info.phone_number})
         await message.answer('🟢 Поздравляю! Оплата прошла!\n'
                              'Ожидайте сообщение на почту, с вашими данными для обучения📩')

@@ -6,6 +6,7 @@ from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_buy, keyboard_parts
 from lexicon import lexicon
+from photo.get_photo import get_photo
 
 logger = logging.getLogger(__name__)
 dsn = db_config()
@@ -29,27 +30,34 @@ db_manager = DatabaseManager(dsn=dsn)
 
 
 async def check_pay():
-    logging.debug(f'Check_pay')
     now = date.today()
     users = await db_manager.get_users()
     for user in users:
-        if user:
-            date_user = user.end_date
-            days = date_user - now
-            if days.days == 1:
-                await bot.send_message(chat_id=user.user_id, text=lexicon['pay'], reply_markup=keyboard_parts)
-            elif days.days + 1 == 2:
-                await bot.send_message(chat_id=user.user_id, text=lexicon['day_9'], reply_markup=keyboard_parts)
-            elif days.days + 1 == 3:
-                await bot.send_message(chat_id=user.user_id, text=lexicon['del_user'], reply_markup=keyboard_buy)
+        if user and user.end_date:
+            logging.debug(f'Check_pay {user.user_id}')
+            days = user.end_date
+            if days == now:
+                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
+            elif days + 1 < now:
+                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['pay_urgently'].format(day=days+1-now), reply_markup=keyboard_parts())
+            elif days + 1 == now:
+                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['day_9'],
+                                 reply_markup=keyboard_parts())
+            elif user.end_date + 2 == now:
+                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['del_user'])
+                await bot.send_message(chat_id=admin_id(),
+                                       text=lexicon['for_admin_4'].format(user_id=user.user_id,
+                                                                          user_name=user.name,
+                                                                          user_email=user.email,
+                                                                          user_phone=user.phone))
                 await db_manager.delete_user(user_id=user.user_id)
                 logging.debug(f'Kick user by id={user.user_id}')
 
 
 async def check_link():
-    logging.debug(f'Check_link')
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
     for key, item in d.items():
         links = await db_manager.get_links(status=key)
-        if links is None:
+        logging.debug(f'Check_link')
+        if links == []:
             await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=item))

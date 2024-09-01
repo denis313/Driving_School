@@ -33,7 +33,7 @@ def keyboard_page_3():
     page_3 = InlineKeyboardBuilder()
     page_3.row(*[(InlineKeyboardButton(text='Как нас найти 📍', callback_data='page_3'))], width=1)
 
-    return page_3.as_markup()
+    return page_3.row(*next_photo()).as_markup()
 
 
 def keyboard_page_4():
@@ -109,3 +109,8 @@ def back(page: str):
 
 keyboard_friend = (ReplyKeyboardBuilder())
 (keyboard_friend.row(*[KeyboardButton(text=bt) for bt in lexicon["button"]], width=2))
+
+
+def next_photo():
+    button = [(InlineKeyboardButton(text='Фото класса Автошколы',callback_data='next_photo'))]
+    return button

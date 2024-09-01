@@ -9,6 +9,7 @@ from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
 from keyboards import CallFactory, CallbackFactory, keyboard_buy
 from lexicon import lexicon
+from photo.get_photo import get_photo
 
 router = Router()
 router.message.filter(IsAdmin())
@@ -22,10 +23,11 @@ async def payments(callback: CallbackQuery, callback_data: CallbackFactory, bot:
         chat_id=callback_data.user_id,
         message_id=callback_data.mg,
         media=InputMediaPhoto(
-            media="AgACAgIAAxkBAAEUSORmzhPYYRENasJzgMsyHaeCu6v_SQACsOIxG2hucEo8ld5QEOW9PAEAAwIAA3kAAzUE",
+            media=get_photo(name=9),
             caption=lexicon['buy']
         ),
         reply_markup=keyboard_buy())
+    await db_manager.update_user(user_id=callback_data.user_id, user_data={'buy': True})
     await callback.message.answer('Возможность оплатить предоставлена✅')
 
 

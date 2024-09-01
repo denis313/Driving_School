@@ -10,7 +10,7 @@ from database.model import Base, Users, Links
 from lexicon import lexicon
 
 
-async def check(status: bool):
+async def send_admin(status: bool):
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
     await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]))
 
@@ -34,7 +34,8 @@ class DatabaseManager:
                 await session.commit()
                 logging.debug(f'New user added with id: {new_user.user_id}')
                 return new_user  # Возвращаем объект нового пользователя
-        except IntegrityError:
+        except IntegrityError as e:
+            print('ERRRORRR', e)
             logging.debug(f'User with data {user_data} already exists')
             return None  # Возвращаем None, если пользователь уже существует
         except SQLAlchemyError as e:
@@ -87,8 +88,11 @@ class DatabaseManager:
             result = await session.execute(select(Links).where(Links.status == status))
             link = result.scalar()
             logging.debug('Get link')
-            await check(status=status)
-            return link if link else None
+            if link:
+                return link
+            else:
+                await send_admin(status=status)
+                return None
 
     async def delete_link(self, link_id):
         async with self.async_session() as session:
@@ -100,11 +104,11 @@ class DatabaseManager:
     async def get_links(self, status: bool):
         try:
             async with self.async_session() as session:
-                result = await session.execute(select(Users).where(Links.status == status))
+                result = await session.execute(select(Links).where(Links.status == status))
                 all_links = result.scalars()
                 links = [link for link in all_links]
                 return links
         except SQLAlchemyError as e:
             logging.error(f'Error occurred while adding user: {str(e)}')
-            await check(status=status)
+            await send_admin(status=status)
             return None
