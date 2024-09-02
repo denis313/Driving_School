@@ -4,15 +4,13 @@ from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto
-
-from amocrm.v2 import Lead
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from bot import bot
 from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_page_2, keyboard_page_3, keyboard_page_4, keyboard_page_5, keyboard_parts, allow_payment, \
     back, keyboard_buy, keyboard_page_6, keyboard_friend, \
-    keyboard_page_7, keyboard_page_8
+    keyboard_page_7, keyboard_page_8, keyboard_page_9
 from lexicon import lexicon
 from photo.get_photo import get_photo
 
@@ -36,20 +34,20 @@ async def page_two(callback: CallbackQuery):
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=2),
+            media=get_photo(name='next_1'),
             caption=lexicon['two']
         ),
         reply_markup=keyboard_page_3())
 
 
-@router.callback_query(F.data == 'next_photo')
+@router.callback_query(F.data == 'next_1')
 async def handle_next_photo(callback: CallbackQuery):
     try:
         await bot.edit_message_media(
             chat_id=callback.message.chat.id,
             message_id=callback.message.message_id,
             media=InputMediaPhoto(
-                media=get_photo(name='next'),
+                media=get_photo(name=2),
                 caption=lexicon['two']
             ),
             reply_markup=keyboard_page_3())
@@ -63,10 +61,40 @@ async def page_three(callback: CallbackQuery):
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=3),
+            media=get_photo(name='next_2'),
             caption=lexicon['three']
         ),
-        reply_markup=keyboard_page_4())
+        reply_markup=keyboard_page_4(mg_text='Здание Автошколы 🏢', mg_cal='next_2'))
+
+
+@router.callback_query(F.data == 'next_2')
+async def handle_next_photo(callback: CallbackQuery):
+    try:
+        await bot.edit_message_media(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
+            media=InputMediaPhoto(
+                media=get_photo(name='next_3'),
+                caption=lexicon['three']
+            ),
+            reply_markup=keyboard_page_4(mg_text='Мы на карте🗺', mg_cal='next_3'))
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data == 'next_3')
+async def handle_next_photo(callback: CallbackQuery):
+    try:
+        await bot.edit_message_media(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
+            media=InputMediaPhoto(
+                media=get_photo(name=3),
+                caption=lexicon['three']
+            ),
+            reply_markup=keyboard_page_4(mg_text='Наша Автошкола🏫', mg_cal='next_3'))
+    except TelegramBadRequest:
+        pass
 
 
 @router.callback_query(F.data == 'page_4')
@@ -94,8 +122,21 @@ async def page_fife(callback: CallbackQuery):
     await db_manager.add_user(user_data={'user_id': callback.from_user.id})
 
 
-@router.callback_query(F.data.in_({'adult', 'no_adult'}))
+@router.callback_query(F.data == 'page_6')
 async def page_six(callback: CallbackQuery):
+    await bot.edit_message_media(
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.message_id,
+        media=InputMediaPhoto(
+            media=get_photo(name=6),
+            caption=lexicon['six']
+        ),
+        reply_markup=keyboard_page_7())
+    await db_manager.add_user(user_data={'user_id': callback.from_user.id})
+
+
+@router.callback_query(F.data.in_({'adult', 'no_adult'}))
+async def page_seven(callback: CallbackQuery):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if user.doc is None:
         if callback.data == 'adult':
@@ -107,48 +148,50 @@ async def page_six(callback: CallbackQuery):
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=6),
-            caption=lexicon['six']
+            media=get_photo(name=7),
+            caption=lexicon['seven']
         ),
-        reply_markup=keyboard_page_7())
+        reply_markup=keyboard_page_8())
+    await bot.send_document(chat_id=callback.message.chat.id,
+                            document=FSInputFile('handlers/Договор', filename='document'))
 
 
-@router.callback_query(F.data == 'page_7')
-async def page_seven(callback: CallbackQuery):
+@router.callback_query(F.data == 'page_8')
+async def page_eight(callback: CallbackQuery):
     user_id = callback.from_user.id
     chat_id = callback.message.chat.id
     message_id = callback.message.message_id
     user = await db_manager.get_user(user_id=user_id) # Получаем данные пользователя
     page = 'adult' if user.adult else 'no_adult' # Определяем страницу для клавиатуры
-    kb = keyboard_page_8(page=page)
+    kb = keyboard_page_9(page=page)
     link = await db_manager.get_link(status=user.adult) # Получаем ссылку на основе статуса возраста
     mg = lexicon['waiting'] # Инициализируем переменную mg на случай, если ни одно из условий не выполнится
     if user.doc:
-        mg = lexicon['seven'].format(url=user.doc)  # Если документ уже существует
+        mg = lexicon['eight'].format(url=user.doc)  # Если документ уже существует
     elif link:
         await db_manager.update_user(user_id=user_id, user_data={'doc': str(link.link)}) # Обновляем данные пользователя и удаляем использованную ссылку
         await db_manager.delete_link(link_id=link.id_link)
-        mg = lexicon['seven'].format(url=link.link)
+        mg = lexicon['eight'].format(url=link.link)
     else:
         kb = back(page='page_5') # Если ссылка не найдена, используем альтернативный текст
     await bot.edit_message_media(
         chat_id=chat_id,
         message_id=message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=7),
+            media=get_photo(name=8),
             caption=mg
         ),
         reply_markup=kb
     )
 
 
-@router.callback_query(F.data == 'page_8')
-async def page_eight(callback: CallbackQuery):
+@router.callback_query(F.data == 'page_9')
+async def page_nine(callback: CallbackQuery):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if user.buy is False:
-        kb = back(page='page_7')
+        kb = back(page='page_8')
         mg = lexicon['eight']
-        photo = get_photo(name=8)
+        photo = get_photo(name=9)
         await bot.send_message(chat_id=admin_id(), text=lexicon['for_admin_2'],
                                reply_markup=allow_payment(user_id=callback.from_user.id,
                                                           mg_id=callback.message.message_id))
@@ -167,12 +210,12 @@ async def page_eight(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'parts')
-async def page_nine(callback: CallbackQuery):
+async def page_ten(callback: CallbackQuery):
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=10),
+            media=get_photo(name=11),
             caption=lexicon['parts']
         ),
         reply_markup=keyboard_parts())
@@ -184,7 +227,7 @@ async def buy_all(callback: CallbackQuery):
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         media=InputMediaPhoto(
-            media=get_photo(name=9),
+            media=get_photo(name=10),
             caption=lexicon['buy']
         ),
         reply_markup=keyboard_buy())

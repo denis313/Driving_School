@@ -37,14 +37,14 @@ async def check_pay():
             logging.debug(f'Check_pay {user.user_id}')
             days = user.end_date
             if days == now:
-                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
+                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
             elif days + 1 < now:
-                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['pay_urgently'].format(day=days+1-now), reply_markup=keyboard_parts())
+                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay_urgently'].format(day=days+1-now), reply_markup=keyboard_parts())
             elif days + 1 == now:
-                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['day_9'],
+                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['day_9'],
                                  reply_markup=keyboard_parts())
-            elif user.end_date + 2 == now:
-                await bot.send_photo(photo=get_photo(name=9), chat_id=user.user_id, caption=lexicon['del_user'])
+            elif user.end_date + 2 >= now:
+                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['del_user'])
                 await bot.send_message(chat_id=admin_id(),
                                        text=lexicon['for_admin_4'].format(user_id=user.user_id,
                                                                           user_name=user.name,

@@ -23,7 +23,7 @@ async def payments(callback: CallbackQuery, callback_data: CallbackFactory, bot:
         chat_id=callback_data.user_id,
         message_id=callback_data.mg,
         media=InputMediaPhoto(
-            media=get_photo(name=9),
+            media=get_photo(name=10),
             caption=lexicon['buy']
         ),
         reply_markup=keyboard_buy())
