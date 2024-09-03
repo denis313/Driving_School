@@ -141,9 +141,13 @@ async def page_seven(callback: CallbackQuery):
     if user.doc is None:
         if callback.data == 'adult':
             adult = True
+            doc = FSInputFile('handlers/document.docx', filename='Образец Договора')
         else:
             adult = False
+            doc = FSInputFile('handlers/Договор', filename='Образец Договора')
         await db_manager.update_user(user_id=callback.from_user.id, user_data={'adult': adult})
+        await bot.send_document(chat_id=callback.message.chat.id,
+                                document=doc)
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
@@ -152,8 +156,7 @@ async def page_seven(callback: CallbackQuery):
             caption=lexicon['seven']
         ),
         reply_markup=keyboard_page_8())
-    await bot.send_document(chat_id=callback.message.chat.id,
-                            document=FSInputFile('handlers/Договор', filename='document'))
+
 
 
 @router.callback_query(F.data == 'page_8')
@@ -190,7 +193,7 @@ async def page_nine(callback: CallbackQuery):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if user.buy is False:
         kb = back(page='page_8')
-        mg = lexicon['eight']
+        mg = lexicon['nine']
         photo = get_photo(name=9)
         await bot.send_message(chat_id=admin_id(), text=lexicon['for_admin_2'],
                                reply_markup=allow_payment(user_id=callback.from_user.id,
