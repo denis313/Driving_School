@@ -141,10 +141,10 @@ async def page_seven(callback: CallbackQuery):
     if user.doc is None:
         if callback.data == 'adult':
             adult = True
-            doc = FSInputFile('handlers/document.pdf', filename='Образец Договора')
+            doc = FSInputFile('handlers/document.pdf', filename='Образец Договора.pdf')
         else:
             adult = False
-            doc = FSInputFile('handlers/document.docx', filename='Образец Договора')
+            doc = FSInputFile('handlers/document.docx', filename='Образец Договора.docx')
         await db_manager.update_user(user_id=callback.from_user.id, user_data={'adult': adult})
         await bot.send_document(chat_id=callback.message.chat.id,
                                 document=doc)
