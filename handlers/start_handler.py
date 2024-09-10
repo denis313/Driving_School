@@ -30,7 +30,8 @@ async def page_one(message: Message):
 
 @router.callback_query(F.data == 'page_2')
 async def page_two(callback: CallbackQuery):
-    await callback.message.answer_audio(audio=InputFile(filename='samolet-zahodit-na-posadku.mp3'))
+    await callback.message.answer_audio(audio=FSInputFile(path='handlers/samolet-zahodit-na-posadku.mp3',
+                                                          filename='samolet-zahodit-na-posadku.mp3'))
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
