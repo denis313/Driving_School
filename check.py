@@ -41,6 +41,7 @@ async def check_pay():
             print(days, now, end, days < now < end)
             print(end, now, end == now)
             print(now, (end + timedelta(days=1)), (end + timedelta(days=1)) >= now)
+
             if days == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
             elif days < now < end:
