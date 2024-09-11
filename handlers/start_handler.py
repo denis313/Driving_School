@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile, InputMediaAudio, InputFile
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from bot import bot
 from config import db_config, admin_id
 from database.requests import DatabaseManager
@@ -30,8 +30,7 @@ async def page_one(message: Message):
 
 @router.callback_query(F.data == 'page_2')
 async def page_two(callback: CallbackQuery):
-    await callback.message.answer_audio(audio=FSInputFile(path='handlers/samolet-zahodit-na-posadku.mp3',
-                                                          filename='samolet-zahodit-na-posadku.mp3'))
+    # await callback.message.answer_audio(audio=InputFile(filename='samolet-zahodit-na-posadku.mp3'))
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,

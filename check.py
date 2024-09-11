@@ -40,11 +40,12 @@ async def check_pay():
             print(days, now, days==now)
             print(days, now, end, days < now < end)
             print(end, now, end == now)
-            print(now, (end + timedelta(days=1)), (end + timedelta(days=1)) >= now)
+            print(now, (end + timedelta(days=1)), (end + timedelta(days=1)) <= now)
             if days == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
             elif days < now < end:
-                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay_urgently'].format(day=days+1-now), reply_markup=keyboard_parts())
+                await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id,
+                                     caption=lexicon['pay_urgently'].format(day=((end+timedelta(days=1))-now).days), reply_markup=keyboard_parts())
             elif end == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['day_9'],
                                  reply_markup=keyboard_parts())
