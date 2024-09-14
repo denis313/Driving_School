@@ -17,13 +17,13 @@ class Users(Base):
     total: Mapped[int] = mapped_column(default=0)
     status = mapped_column(Boolean, default=False)
     doc: Mapped[str] = mapped_column(nullable=True)
+    request = mapped_column(Boolean)
     reg = mapped_column(Boolean, default=False)
     adult = mapped_column(Boolean)
     buy = mapped_column(Boolean, default=False)
     email: Mapped[str] = mapped_column(nullable=True)
     name: Mapped[str] = mapped_column(nullable=True)
     phone: Mapped[str] = mapped_column(nullable=True)
-    start_date = mapped_column(Date)
     end_date = mapped_column(Date)
 
     def __repr__(self) -> str:

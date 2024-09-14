@@ -12,7 +12,7 @@ from keyboards import keyboard_page_2, keyboard_page_3, keyboard_page_4, keyboar
     back, keyboard_buy, keyboard_page_6, keyboard_friend, \
     keyboard_page_7, keyboard_page_8, keyboard_page_9
 from lexicon import lexicon
-from photo.get_photo import get_photo
+from service import get_photo
 
 router = Router()
 router.message.filter(F.chat.type == 'private')
@@ -178,6 +178,7 @@ async def page_eight(callback: CallbackQuery):
         mg = lexicon['eight'].format(url=link.link)
     else:
         kb = back(page='page_5') # Если ссылка не найдена, используем альтернативный текст
+        await db_manager.update_user(user_id=user_id, user_data={'request': True})
     await bot.edit_message_media(
         chat_id=chat_id,
         message_id=message_id,
@@ -202,7 +203,7 @@ async def page_nine(callback: CallbackQuery):
     else:
         kb = keyboard_buy()
         mg = lexicon['buy']
-        photo = get_photo(name=9)
+        photo = get_photo(name=10)
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,

@@ -9,7 +9,7 @@ from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
 from keyboards import CallFactory, CallbackFactory, keyboard_buy
 from lexicon import lexicon
-from photo.get_photo import get_photo
+from service import get_photo, send_link
 
 router = Router()
 router.message.filter(IsAdmin())
@@ -54,6 +54,8 @@ async def add_list(message: Message, state: FSMContext):
     await state.update_data(links=message.text)
     data = await state.get_data()
     for link in data['links'].split(','):
-        await db_manager.add_link(link={'status': data['status'], 'link': link.strip()})
+        flag = await send_link(status=data['status'], link=link)
+        if flag is False:
+            await db_manager.add_link(link={'status': data['status'], 'link': link.strip()})
     await state.clear()
     await message.answer('Ссылки приняты✅')

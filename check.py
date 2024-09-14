@@ -6,7 +6,7 @@ from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_buy, keyboard_parts
 from lexicon import lexicon
-from photo.get_photo import get_photo
+from service import get_photo
 
 logger = logging.getLogger(__name__)
 dsn = db_config()
@@ -37,15 +37,11 @@ async def check_pay():
             logging.debug(f'Check_pay {user.user_id}')
             days = user.end_date
             end = days + timedelta(days=2)
-            print(days, now, days==now)
-            print(days, now, end, days < now < end)
-            print(end, now, end == now)
-            print(now, (end + timedelta(days=1)), (end + timedelta(days=1)) <= now)
             if days == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
             elif days < now < end:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id,
-                                     caption=lexicon['pay_urgently'].format(day=((end+timedelta(days=1))-now).days), reply_markup=keyboard_parts())
+                                     caption=lexicon['pay_urgently'].format(day=(end+timedelta(days=1)-now).days), reply_markup=keyboard_parts())
             elif end == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['day_9'],
                                  reply_markup=keyboard_parts())
