@@ -24,8 +24,8 @@ async def main():
     dp = Dispatcher()
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_pay, 'cron', hour=9, minute=15)
-    scheduler.add_job(check_link, 'cron', hour=7, minute=52)
+    scheduler.add_job(check_pay, 'cron', hour=7, minute=0)
+    scheduler.add_job(check_link, 'cron', hour=7, minute=0)
     scheduler.start()
 
     # Регистриуем роутеры в диспетчере
