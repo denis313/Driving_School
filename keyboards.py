@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
+
 from lexicon import lexicon
 
 

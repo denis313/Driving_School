@@ -9,6 +9,7 @@ from config import admin_id, db_config, provider_token_yookassa
 from database.requests import DatabaseManager
 from lexicon import lexicon
 
+
 logger = logging.getLogger(__name__)
 router = Router()
 router.message.filter(F.chat.type == 'private')
@@ -71,16 +72,14 @@ async def successful_payment_handler(message: Message, bot: Bot):
     successful_payment = message.successful_payment
     if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450: # successfull = 5000 user_total + 5000 != 25000
         start_date = date.today()
-        end_date = start_date + timedelta(days=2)
+        end_date = start_date + timedelta(days=10)
         total = user.total + int(message.successful_payment.invoice_payload)
         await db_manager.update_user(user_id=message.from_user.id, user_data={'total': total,
-                                                                              'start_date': start_date,
                                                                               'end_date': end_date})
         await message.answer(f'🟢 Оплата прошла, вы уже выплатили {total}')
     else:
         await db_manager.update_user(user_id=message.from_user.id, user_data={'status': True,
                                                                               'total': 25000,
-                                                                              'start_date': None,
                                                                               'end_date': None})
         await message.answer('🟢 Поздравляю!\n'
                              'Обучение оплачено полностью❤️')

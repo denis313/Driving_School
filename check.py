@@ -36,7 +36,7 @@ async def check_pay():
         if user and user.end_date:
             logging.debug(f'Check_pay {user.user_id}')
             days = user.end_date
-            end = days + timedelta(days=2)
+            end = days + timedelta(days=9)
             if days == now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['pay'], reply_markup=keyboard_parts())
             elif days < now < end:
