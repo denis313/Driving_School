@@ -72,7 +72,7 @@ async def successful_payment_handler(message: Message, bot: Bot):
     successful_payment = message.successful_payment
     if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450: # successfull = 5000 user_total + 5000 != 25000
         start_date = date.today()
-        end_date = start_date + timedelta(days=10)
+        end_date = start_date + timedelta(days=30)
         total = user.total + int(message.successful_payment.invoice_payload)
         await db_manager.update_user(user_id=message.from_user.id, user_data={'total': total,
                                                                               'end_date': end_date})
