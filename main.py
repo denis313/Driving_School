@@ -4,7 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Dispatcher
 
 from bot import bot
-from check import check_pay, check_link
+from check import check_link, check_pay
 
 from handlers import start_handler, handler_buy, other_handler, for_admin
 

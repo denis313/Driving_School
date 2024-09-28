@@ -13,22 +13,6 @@ dsn = db_config()
 db_manager = DatabaseManager(dsn=dsn)
 
 
-# async def check_pay():
-#     logging.debug(f'Check_pay')
-#     now = date.today()
-#     users = await db_manager.get_users()
-#     for user in users:
-#         days = date_user - now
-#         if days.days == 3:
-#             await bot.send_message(chat_id=user.user_id, text=lexicon['pay'], reply_markup=keyboard_parts)
-#         elif days.days + 10 == 9:
-#             await bot.send_message(chat_id=user.user_id, text=lexicon['day_9'], reply_markup=keyboard_parts)
-#         elif days.days + 10 == 10:
-#             await bot.send_message(chat_id=user.user_id, text=lexicon['del_user'], reply_markup=keyboard_buy)
-#             await db_manager.delete_user(user_id=user.user_id)
-#             logging.debug(f'Kick user by id={user.user_id}')
-
-
 async def check_pay():
     now = date.today()
     users = await db_manager.get_users()
@@ -48,8 +32,7 @@ async def check_pay():
             elif (end + timedelta(days=1)) <= now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['del_user'])
                 await bot.send_message(chat_id=admin_id(),
-                                       text=lexicon['for_admin_4'].format(user_id=user.user_id,
-                                                                          user_name=user.name,
+                                       text=lexicon['for_admin_4'].format(user_name=user.name,
                                                                           user_email=user.email,
                                                                           user_phone=user.phone))
                 await db_manager.delete_user(user_id=user.user_id)

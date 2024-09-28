@@ -91,6 +91,15 @@ def keyboard_buy():
     return buy.row(*keyboard_back(call='page_8')).as_markup()
 
 
+# def keyboard_buy():
+#     buy = InlineKeyboardBuilder()
+#     buy.row(
+#         *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),],
+#         width=1)
+#
+#     return buy.row(*keyboard_back(call='page_8')).as_markup()
+
+
 def keyboard_parts():
     buy = InlineKeyboardBuilder()
     buy.row(
