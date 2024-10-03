@@ -22,9 +22,9 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if not user or user.status is False:
         if callback.data == 'yookassa':
-            cost = 450 - user.total # total = 25000
+            cost = 25000 - user.total # total = 25000
         elif callback.data == 'yookassa_parts':
-            cost = 90 # cost = 5000
+            cost = 5000 # cost = 5000
         await bot.send_invoice(
             chat_id=callback.from_user.id,
             need_name=True,
@@ -70,7 +70,7 @@ async def process_pre_check(pre_checkout_query: PreCheckoutQuery, bot: Bot):
 async def successful_payment_handler(message: Message, bot: Bot):
     user = await db_manager.get_user(user_id=message.from_user.id)
     successful_payment = message.successful_payment
-    if message.successful_payment.invoice_payload == '90' and user.total + 90 != 450: # successfull = 5000 user_total + 5000 != 25000
+    if message.successful_payment.invoice_payload == '5000' and user.total + 5000 != 25000: # successfull = 5000 user_total + 5000 != 25000
         start_date = date.today()
         end_date = start_date + timedelta(days=30)
         total = user.total + int(message.successful_payment.invoice_payload)
