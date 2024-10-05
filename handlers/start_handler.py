@@ -236,3 +236,9 @@ async def buy_all(callback: CallbackQuery):
             caption=lexicon['buy']
         ),
         reply_markup=keyboard_buy())
+
+
+@router.callback_query(F.data == 'help')
+async def help_handler(callback: CallbackQuery):
+    await callback.message.answer(text='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79232656553\n'
+                                       'Вам постараются помочь в вашем вопросе')

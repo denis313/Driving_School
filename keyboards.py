@@ -18,14 +18,16 @@ class CallbackFactory(CallbackData, prefix='doc', sep='-'):
 
 
 def keyboard_back(call):
-    buttons = [(InlineKeyboardButton(text='Назад 🔙', callback_data=call))]
+    buttons = [(InlineKeyboardButton(text='Назад 🔙', callback_data=call)),
+               (InlineKeyboardButton(text='Тех. Поддержка🚨', callback_data='help'))]
 
     return buttons
 
 
 def keyboard_page_2():
     page_2 = InlineKeyboardBuilder()
-    page_2.row(*[(InlineKeyboardButton(text='Полетели ✈', callback_data='page_2'))], width=1)
+    page_2.row(*[(InlineKeyboardButton(text='Полетели ✈', callback_data='page_2')),
+                 (InlineKeyboardButton(text='Тех. Поддержка🚨', callback_data='help'))], width=1)
 
     return page_2.as_markup()
 
@@ -34,7 +36,7 @@ def keyboard_page_3():
     page_3 = InlineKeyboardBuilder()
     page_3.row(*[(InlineKeyboardButton(text='Как нас найти 🔜', callback_data='page_3'))], width=1)
 
-    return page_3.row(*next_photo(mg='Фото Автодрома🚘', cal='next_1')).as_markup()
+    return page_3.row(*next_photo(mg='Фото Автодрома🚘', cal='next_1')).row(*next_photo(mg='Тех. Поддержка🚨', cal='help')).as_markup()
 
 
 def keyboard_page_4(mg_text: str, mg_cal):
