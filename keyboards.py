@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, KeyboardButton
+from aiogram.types import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
@@ -134,3 +134,6 @@ keyboard_friend = (ReplyKeyboardBuilder())
 def next_photo(mg: str, cal):
     button = [(InlineKeyboardButton(text=mg,callback_data=cal))]
     return button
+
+
+contact_keyboard = ReplyKeyboardBuilder().add(KeyboardButton(text="📱 Отправить Телефон", request_contact=True))

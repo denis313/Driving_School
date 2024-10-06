@@ -4,15 +4,15 @@ from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile, ReplyKeyboardRemove
 from bot import bot
 from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_page_2, keyboard_page_3, keyboard_page_4, keyboard_page_5, keyboard_parts, allow_payment, \
     back, keyboard_buy, keyboard_page_6, keyboard_friend, \
-    keyboard_page_7, keyboard_page_8, keyboard_page_9
+    keyboard_page_7, keyboard_page_8, keyboard_page_9, contact_keyboard
 from lexicon import lexicon
-from service import get_photo
+from service import get_photo, IsPhone
 
 router = Router()
 router.message.filter(F.chat.type == 'private')
@@ -121,6 +121,10 @@ async def page_fife(callback: CallbackQuery):
         ),
         reply_markup=keyboard_page_6())
     await db_manager.add_user(user_data={'user_id': callback.from_user.id})
+    user = await db_manager.get_user(user_id=callback.from_user.id)
+    if user.phone is None:
+        await callback.message.answer("Нажмите на кнопку ниже, чтобы отправить контакт",
+                                  reply_markup=contact_keyboard.as_markup(resize_keyboard=True))
 
 
 @router.callback_query(F.data == 'page_6')
@@ -242,3 +246,12 @@ async def buy_all(callback: CallbackQuery):
 async def help_handler(callback: CallbackQuery):
     await callback.message.answer(text='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79232656553\n'
                                        'Вам постараются помочь в вашем вопросе')
+
+@router.message(IsPhone())
+async def get_contact(message: Message):
+    contact = message.contact
+    await db_manager.update_user(user_id=message.from_user.id, user_data={'phone': contact.phone_number})
+    await bot.send_message(chat_id=admin_id(), text=f'Пользователь дал согласие на обработку персональных данных.\n'
+                                                    f'Его номер : {contact.phone_number}')
+    await message.answer(f"Ваш номер {contact.phone_number} был получен",
+                         reply_markup=ReplyKeyboardRemove())

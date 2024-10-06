@@ -1,5 +1,8 @@
-from aiogram.types import FSInputFile
+import re
+from aiogram.types import Message
 
+from aiogram.types import FSInputFile
+from aiogram.filters import BaseFilter
 from bot import bot
 from config import db_config
 from database.requests import DatabaseManager
@@ -22,3 +25,12 @@ async def send_link(status: bool, link: str):
             return True
     else:
         return False
+
+class IsPhone(BaseFilter):
+    async def __call__(self, message: Message):
+        try:
+            if message.contact.phone_number:
+                return True
+        except AttributeError:
+            match = re.fullmatch(r'\+7\d{3}\d{7}', message.text.strip())
+            return bool(match)
