@@ -7,12 +7,13 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from bot import bot
 from config import admin_id
 from database.model import Base, Users, Links
+from keyboards import keyboard_friend
 from lexicon import lexicon
 
 
 async def send_admin(status: bool):
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
-    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]))
+    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
 
 
 class DatabaseManager:

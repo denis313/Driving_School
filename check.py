@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from bot import bot
 from config import db_config, admin_id
 from database.requests import DatabaseManager
-from keyboards import keyboard_buy, keyboard_parts
+from keyboards import keyboard_buy, keyboard_parts, keyboard_friend
 from lexicon import lexicon
 from service import get_photo
 
@@ -45,4 +45,4 @@ async def check_link():
         links = await db_manager.get_links(status=key)
         logging.debug(f'Check_link')
         if links == []:
-            await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=item))
+            await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=item), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
