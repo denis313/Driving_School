@@ -244,7 +244,7 @@ async def buy_all(callback: CallbackQuery):
 
 @router.callback_query(F.data == 'help')
 async def help_handler(callback: CallbackQuery):
-    await callback.message.answer(text='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79232656553\n'
+    await bot.send_photo(chat_id=callback.from_user.id, photo=get_photo(name=12), caption='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79232656553\n'
                                        'Вам постараются помочь в вашем вопросе')
 
 @router.message(IsPhone())
