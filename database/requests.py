@@ -113,3 +113,13 @@ class DatabaseManager:
             logging.error(f'Error occurred while adding user: {str(e)}')
             await send_admin(status=status)
             return None
+
+    async def get_users_links(self):
+        async with self.async_session() as session:
+            # Предположим, что есть поле created_at или ID, по которому можно сортировать пользователей
+            result = await session.execute(
+                select(Users).order_by(Users.user_id.desc()).limit(30)
+            )
+            all_users = result.scalars()
+            users = [user for user in all_users]
+            return users

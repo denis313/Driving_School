@@ -7,7 +7,7 @@ from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from config import db_config
 from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
-from keyboards import CallFactory, CallbackFactory, keyboard_buy
+from keyboards import CallFactory, CallbackFactory, keyboard_buy, admin_kb
 from lexicon import lexicon
 from service import get_photo, send_link
 
@@ -59,3 +59,53 @@ async def add_list(message: Message, state: FSMContext):
             await db_manager.add_link(link={'status': data['status'], 'link': link.strip()})
     await state.clear()
     await message.answer('Ссылки приняты✅')
+
+
+@router.callback_query(F.data == 'sent_links')
+async def payments(callback: CallbackQuery, bot: Bot):
+    users = await db_manager.get_users_links()
+    mg = ''
+    try:
+        if users:
+            for user in users:
+                if user.doc is not None:
+                    mg += f'Номер: {user.phone} - ссылка {user.doc}\n'
+            if mg:  # Проверка, есть ли сформированные данные
+                await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id,
+                                            text=mg, reply_markup=admin_kb())
+            else:
+                await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id,
+                                            text="Нет доступных ссылок.", reply_markup=admin_kb())
+        else:
+            await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id,
+                                        text="Нет пользователей.", reply_markup=admin_kb())
+    except Exception as e:
+        print(f"Ошибка: {e}")
+
+    # await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id, text='Ссылки не отправляли',
+    #                             reply_markup=admin_kb())
+
+
+@router.callback_query(F.data == 'rest_links')
+async def payments(callback: CallbackQuery, bot: Bot):
+    d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
+    count = 0
+    mg = ''
+    try:
+        for key, item in d.items():
+            links = await db_manager.get_links(status=key)
+            if links:  # Проверяем, есть ли ссылки для текущей категории
+                count += len(links)
+                for link in links:
+                    mg += f'{item} - {link.link}\n'  # Используем item вместо d[key]
+            else:
+                mg += f'{item} - Нет доступных ссылок\n'
+
+        if mg:
+            await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id,
+                                        text=f'Всего ссылок - {count}\n' + mg, reply_markup=admin_kb())
+        else:
+            await bot.edit_message_text(chat_id=callback.from_user.id, message_id=callback.message.message_id,
+                                        text='Ссылок нет.', reply_markup=admin_kb())
+    except Exception as e:
+        print(f"Ошибка: {e}")

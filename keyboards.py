@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-
+from netaddr.strategy.eui48 import width
 
 from lexicon import lexicon
 
@@ -137,3 +137,10 @@ def next_photo(mg: str, cal):
 
 
 contact_keyboard = ReplyKeyboardBuilder().add(KeyboardButton(text="📱 Отправить Телефон", request_contact=True))
+
+
+def admin_kb():
+    kb = InlineKeyboardBuilder()
+    kb.row(*[InlineKeyboardButton(text='Остаток ссылок 📲', callback_data='rest_links'),
+             InlineKeyboardButton(text='Отправленные ссылки 📲', callback_data='sent_links')], width=1)
+    return kb.as_markup()

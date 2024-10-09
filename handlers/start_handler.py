@@ -10,7 +10,7 @@ from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_page_2, keyboard_page_3, keyboard_page_4, keyboard_page_5, keyboard_parts, allow_payment, \
     back, keyboard_buy, keyboard_page_6, keyboard_friend, \
-    keyboard_page_7, keyboard_page_8, keyboard_page_9, contact_keyboard
+    keyboard_page_7, keyboard_page_8, keyboard_page_9, contact_keyboard, admin_kb
 from lexicon import lexicon
 from service import get_photo, IsPhone
 
@@ -25,7 +25,7 @@ async def page_one(message: Message):
     await db_manager.create_tables()
     await bot.send_photo(chat_id=message.from_user.id, photo=get_photo(name=1), caption=lexicon['start'], reply_markup=keyboard_page_2())
     if str(message.from_user.id) == admin_id():
-        await message.answer("Вы администратор", reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+        await message.answer("Вы администратор +", reply_markup=admin_kb())
 
 
 @router.callback_query(F.data == 'page_2')
