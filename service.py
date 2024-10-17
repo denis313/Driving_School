@@ -1,11 +1,17 @@
+import base64
 import re
-from aiogram.types import Message
+import uuid
+from gc import callbacks
+
+from aiogram.types import Message, CallbackQuery
 
 from aiogram.types import FSInputFile
 from aiogram.filters import BaseFilter
 from bot import bot
 from config import db_config
 from database.requests import DatabaseManager
+from yookassa import Configuration, Payment
+
 
 dsn = db_config()
 db_manager = DatabaseManager(dsn=dsn)
@@ -34,3 +40,36 @@ class IsPhone(BaseFilter):
         except AttributeError:
             match = re.fullmatch(r'\+7\d{3}\d{7}', message.text.strip())
             return bool(match)
+
+
+class IsPage(BaseFilter):
+    async def __call__(self, callback: CallbackQuery):
+        try:
+            return callback.data == 'page_8'
+        except AttributeError:
+            return False
+
+
+
+def create_payment(amount: int, description: str, chat_id: int):
+    Configuration.account_id = '463028'
+    Configuration.secret_key = 'test_8uk2ZCfR3aMZYtZechnFWVuCSdhWjepP3r4NUrya1dU'
+    payment = Payment.create({
+        "amount": {
+            "value": f"{amount}.00",
+            "currency": "RUB"
+        },
+        "confirmation": {
+            "type": "redirect",
+            "return_url": "https://t.me/test_driving_school_bot"
+        },
+        "capture": True,
+        "metadata": {
+            'chat_id': chat_id
+        },
+        "description": description
+    }, uuid.uuid4())
+    return payment.confirmation.confirmation_url, payment.id
+
+
+

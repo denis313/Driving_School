@@ -36,7 +36,6 @@ class DatabaseManager:
                 logging.debug(f'New user added with id: {new_user.user_id}')
                 return new_user  # Возвращаем объект нового пользователя
         except IntegrityError as e:
-            print('ERRRORRR', e)
             logging.debug(f'User with data {user_data} already exists')
             return None  # Возвращаем None, если пользователь уже существует
         except SQLAlchemyError as e:

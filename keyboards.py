@@ -1,9 +1,17 @@
+import base64
+import sys
+import uuid
+from sys import prefix
+
 from aiogram.types import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-from netaddr.strategy.eui48 import width
+
 
 from lexicon import lexicon
+
+
+# from service import bs64
 
 
 # Класс для создания callback_data
@@ -15,6 +23,28 @@ class CallFactory(CallbackData, prefix='user', sep='-'):
 class CallbackFactory(CallbackData, prefix='doc', sep='-'):
     user_id: int
     mg: int
+
+
+class IsIdPrepayment(CallbackData, prefix='id', sep=':'):
+    payment_id: str
+
+class Pay(CallbackData, prefix='pay', sep=':'):
+    pay_id: str
+
+
+def bs_64(payment):
+    uuid_obj = uuid.UUID(payment)
+    # Кодирование в Base64
+    compressed_uuid = base64.urlsafe_b64encode(uuid_obj.bytes).rstrip(b'=').decode('utf-8')
+    return compressed_uuid
+
+
+def de_bs64(compressed_uuid):
+    # Декодируем из Base64
+    uuid_bytes = base64.urlsafe_b64decode(compressed_uuid)
+    # Преобразуем байты обратно в объект UUID
+    decoded_uuid = uuid.UUID(bytes=uuid_bytes)
+    return decoded_uuid
 
 
 def keyboard_back(call):
@@ -69,9 +99,9 @@ def keyboard_page_7():
     return page_7.row(*keyboard_back(call='page_5')).as_markup()
 
 
-def keyboard_page_8():
+def keyboard_page_8(page: str, name: str):
     page_8 = InlineKeyboardBuilder()
-    page_8.row(*[(InlineKeyboardButton(text='Получить Договор', callback_data='page_8'))], width=1)
+    page_8.row(*[(InlineKeyboardButton(text=name, callback_data=page))], width=1)
 
     return page_8.row(*keyboard_back(call='page_6')).as_markup()
 
@@ -81,6 +111,15 @@ def keyboard_page_9(page):
     yes.row(*[(InlineKeyboardButton(text='Договор отправил ✔️', callback_data='page_9'))])
 
     return yes.row(*keyboard_back(call=page)).as_markup()
+
+
+def keyboard_prepayment(url:str, id_payment, page):
+    kb = InlineKeyboardBuilder()
+    kb.row(*[InlineKeyboardButton(text='Предоплата 💳', url=url),
+             InlineKeyboardButton(text='Проверка оплаты ✅',
+                                  callback_data=IsIdPrepayment(payment_id=id_payment).pack())],
+           width=1)
+    return kb.row(*keyboard_back(call=page)).as_markup()
 
 
 def keyboard_buy():
@@ -144,3 +183,12 @@ def admin_kb():
     kb.row(*[InlineKeyboardButton(text='Остаток ссылок 📲', callback_data='rest_links'),
              InlineKeyboardButton(text='Отправленные ссылки 📲', callback_data='sent_links')], width=1)
     return kb.as_markup()
+
+
+def kb_buy(url:str, id_payment, page):
+    kb = InlineKeyboardBuilder()
+    kb.row(*[InlineKeyboardButton(text='Оплата 💳', url=url),
+             InlineKeyboardButton(text='Проверка оплаты ✅',
+                                  callback_data=Pay(pay_id=id_payment).pack())],
+           width=1)
+    return kb.row(*keyboard_back(call=page)).as_markup()

@@ -7,7 +7,7 @@ from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from config import db_config
 from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
-from keyboards import CallFactory, CallbackFactory, keyboard_buy, admin_kb
+from keyboards import CallbackFactory, keyboard_buy, admin_kb
 from lexicon import lexicon
 from service import get_photo, send_link
 

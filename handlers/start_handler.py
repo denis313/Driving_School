@@ -1,5 +1,6 @@
 import logging
 
+import yookassa
 from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart, StateFilter
@@ -10,9 +11,10 @@ from config import db_config, admin_id
 from database.requests import DatabaseManager
 from keyboards import keyboard_page_2, keyboard_page_3, keyboard_page_4, keyboard_page_5, keyboard_parts, allow_payment, \
     back, keyboard_buy, keyboard_page_6, keyboard_friend, \
-    keyboard_page_7, keyboard_page_8, keyboard_page_9, contact_keyboard, admin_kb
+    keyboard_page_7, keyboard_page_8, keyboard_page_9, contact_keyboard, admin_kb, keyboard_prepayment, \
+    IsIdPrepayment
 from lexicon import lexicon
-from service import get_photo, IsPhone
+from service import get_photo, IsPhone, create_payment, IsPage
 
 router = Router()
 router.message.filter(F.chat.type == 'private')
@@ -143,6 +145,8 @@ async def page_six(callback: CallbackQuery):
 @router.callback_query(F.data.in_({'adult', 'no_adult'}))
 async def page_seven(callback: CallbackQuery):
     user = await db_manager.get_user(user_id=callback.from_user.id)
+    page = 'page_8'
+    text = 'Получить ссылку на Договор'
     if user.doc is None:
         if callback.data == 'adult':
             adult = True
@@ -153,6 +157,9 @@ async def page_seven(callback: CallbackQuery):
         await db_manager.update_user(user_id=callback.from_user.id, user_data={'adult': adult})
         await bot.send_document(chat_id=callback.message.chat.id,
                                 document=doc)
+    # elif user.prepayment is False:
+        page = 'prepayment'
+        text = 'Предоплата для договора📲'
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
@@ -160,28 +167,84 @@ async def page_seven(callback: CallbackQuery):
             media=get_photo(name=7),
             caption=lexicon['seven']
         ),
-        reply_markup=keyboard_page_8())
+        reply_markup=keyboard_page_8(page=page, name=text))
 
 
+@router.callback_query(F.data == 'prepayment')
+async def prepayment(callback: CallbackQuery):
+    url, id_payment = create_payment(amount=50,
+                                     description="Предоплата для получения договора",
+                                     chat_id=callback.from_user.id)
+    await bot.edit_message_media(
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.message_id,
+        media=InputMediaPhoto(
+            media=get_photo(name=13),
+            caption=lexicon['prepayment']
+        ),
+        reply_markup=keyboard_prepayment(url=url, id_payment=id_payment, page='page_6'))
 
-@router.callback_query(F.data == 'page_8')
-async def page_eight(callback: CallbackQuery):
+
+@router.callback_query(IsIdPrepayment.filter())
+async def page_eight(callback: CallbackQuery, callback_data: IsIdPrepayment):
     user_id = callback.from_user.id
     chat_id = callback.message.chat.id
     message_id = callback.message.message_id
-    user = await db_manager.get_user(user_id=user_id) # Получаем данные пользователя
-    page = 'adult' if user.adult else 'no_adult' # Определяем страницу для клавиатуры
+    user = await db_manager.get_user(user_id=user_id)  # Получаем данные пользователя
+    page = 'adult' if user.adult else 'no_adult'  # Определяем страницу для клавиатуры
+    payment = yookassa.Payment.find_one(callback_data.payment_id)
+    if payment.status == 'succeeded':
+        kb = keyboard_page_9(page=page)
+        link = await db_manager.get_link(status=user.adult)  # Получаем ссылку на основе статуса возраста
+        mg = lexicon['waiting']  # Инициализируем переменную mg на случай, если ни одно из условий не выполнится
+        if user.doc:
+            mg = lexicon['eight'].format(url=user.doc)  # Если документ уже существует
+        elif link:
+            await db_manager.update_user(user_id=user_id, user_data={
+                'doc': str(link.link), 'total': 50})  # Обновляем данные пользователя и удаляем использованную ссылку
+            await db_manager.delete_link(link_id=link.id_link)
+            mg = lexicon['eight'].format(url=link.link)
+        else:
+            kb = back(page='page_5')  # Если ссылка не найдена, используем альтернативный текст
+            await db_manager.update_user(user_id=user_id, user_data={'request': True, 'total': 50})
+        photo = get_photo(name=8)
+    else:
+        url, id_payment = create_payment(amount=50,
+                                         description="Предоплата для получения договора",
+                                         chat_id=callback.from_user.id)
+        mg = 'Оплата не прошла'
+        kb = keyboard_prepayment(url=url, id_payment=id_payment, page=page)
+        photo = get_photo(name=15)
+    await bot.edit_message_media(
+        chat_id=chat_id,
+        message_id=message_id,
+        media=InputMediaPhoto(
+            media=photo,
+            caption=mg
+        ),
+        reply_markup=kb
+    )
+
+
+@router.callback_query(F.data == 'page_8')
+async def page_eight_plus(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    chat_id = callback.message.chat.id
+    message_id = callback.message.message_id
+    user = await db_manager.get_user(user_id=user_id)  # Получаем данные пользователя
+    page = 'adult' if user.adult else 'no_adult'  # Определяем страницу для клавиатуры
     kb = keyboard_page_9(page=page)
-    link = await db_manager.get_link(status=user.adult) # Получаем ссылку на основе статуса возраста
-    mg = lexicon['waiting'] # Инициализируем переменную mg на случай, если ни одно из условий не выполнится
+    link = await db_manager.get_link(status=user.adult)  # Получаем ссылку на основе статуса возраста
+    mg = lexicon['waiting']  # Инициализируем переменную mg на случай, если ни одно из условий не выполнится
     if user.doc:
         mg = lexicon['eight'].format(url=user.doc)  # Если документ уже существует
     elif link:
-        await db_manager.update_user(user_id=user_id, user_data={'doc': str(link.link)}) # Обновляем данные пользователя и удаляем использованную ссылку
+        await db_manager.update_user(user_id=user_id, user_data={
+            'doc': str(link.link)})  # Обновляем данные пользователя и удаляем использованную ссылку
         await db_manager.delete_link(link_id=link.id_link)
         mg = lexicon['eight'].format(url=link.link)
     else:
-        kb = back(page='page_5') # Если ссылка не найдена, используем альтернативный текст
+        kb = back(page='page_5')  # Если ссылка не найдена, используем альтернативный текст
         await db_manager.update_user(user_id=user_id, user_data={'request': True})
     await bot.edit_message_media(
         chat_id=chat_id,

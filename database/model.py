@@ -21,6 +21,7 @@ class Users(Base):
     reg = mapped_column(Boolean, default=False)
     adult = mapped_column(Boolean)
     buy = mapped_column(Boolean, default=False)
+    prepayment = mapped_column(Boolean, default=False)
     email: Mapped[str] = mapped_column(nullable=True)
     name: Mapped[str] = mapped_column(nullable=True)
     phone: Mapped[str] = mapped_column(nullable=True)
@@ -28,7 +29,7 @@ class Users(Base):
 
     def __repr__(self) -> str:
         ...
-        return f"Users: id: {self.id_user}, user_id: {self.user_id}, status: {self.status}"
+        return f"Users: id: {self.id_user}, user_id: {self.user_id}, status: {self.status}, doc: {self.doc}, request: {self.request}"
 
 
 class Links(Base):

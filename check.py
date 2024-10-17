@@ -32,9 +32,7 @@ async def check_pay():
             elif (end + timedelta(days=1)) <= now:
                 await bot.send_photo(photo=get_photo(name=10), chat_id=user.user_id, caption=lexicon['del_user'])
                 await bot.send_message(chat_id=admin_id(),
-                                       text=lexicon['for_admin_4'].format(user_name=user.name,
-                                                                          user_email=user.email,
-                                                                          user_phone=user.phone))
+                                       text=lexicon['for_admin_4'].format(user_phone=user.phone))
                 await db_manager.delete_user(user_id=user.user_id)
                 logging.debug(f'Kick user by id={user.user_id}')
 
