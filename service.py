@@ -67,7 +67,7 @@ def create_payment(amount: int, description: str, chat_id: int):
         },
         "confirmation": {
             "type": "redirect",
-            "return_url": "https://t.me/test_driving_school_bot"
+            "return_url": "https://t.me/Avtokosmos17_bot"
         },
         "payment_method_data": {
             "type": "sbp"
