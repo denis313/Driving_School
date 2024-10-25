@@ -25,16 +25,10 @@ db_manager = DatabaseManager(dsn=dsn)
 async def buy_subscribe(callback: CallbackQuery, bot: Bot):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     if not user or user.status is False:
-        mg = ('Платеж за обучение будет производиться один раз в месяц.'
-              ' Каждый месяц вы будете получать сообщение с требованием произвести очередной платеж. '
-              'После каждого платежа обязательно нажмите кнопку "Проверка оплаты ✅", чтобы убедиться, '
-              'что оплата успешно прошла и обучение может продолжаться без задержек.')
+        mg = lexicon['parts']
         if callback.data == 'yookassa':
             cost = 25000 - user.total # total = 2500
-            mg = ('Для оформления обучения предусмотрена единоразовая оплата. '
-                  'Пожалуйста, внесите полную сумму для завершения процесса. '
-                  'После оплаты обязательно нажмите кнопку "Проверка оплаты✅", '
-                  'чтобы убедиться, что оплата успешно прошла и обучение может начаться без задержек.')
+            mg = 'После оплаты обязательно нажмите кнопку <b>Проверка оплаты✅</b>, чтобы убедиться, что оплата успешно прошла и обучение может начаться без задержек.'
         elif callback.data == 'yookassa_parts':
             cost = 5000  # cost = 5000
             if user.total == 50:
@@ -46,20 +40,20 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
             chat_id=callback.from_user.id,
             message_id=callback.message.message_id,
             media=InputMediaPhoto(
-                media=get_photo(name=10),
+                media=get_photo(name='buy'),
                 caption=mg
             ),
-            reply_markup=kb_buy(id_payment=id_prepayment, url=url, page='page_9')
+            reply_markup=kb_buy(id_payment=id_prepayment, url=url, page='doc_sent')
         )
     else:
         await bot.edit_message_media(
             chat_id=callback.from_user.id,
             message_id=callback.message.message_id,
             media=InputMediaPhoto(
-                media=get_photo(name=10),
+                media=get_photo(name='buy'),
                 caption=lexicon['already_buy']
             ),
-            reply_markup=back(page='page_9')
+            reply_markup=back(page='doc_sent')
         )
 
 
@@ -78,7 +72,7 @@ async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback
                 chat_id=callback.from_user.id,
                 message_id=callback.message.message_id,
                 media=InputMediaPhoto(
-                    media=get_photo(name=10),
+                    media=get_photo(name='buy'),
                     caption=f'🟢 Оплата прошла, вы уже выплатили {total}'
                 ),
                 reply_markup=keyboard_buy()
@@ -91,7 +85,7 @@ async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback
                 chat_id=callback.from_user.id,
                 message_id=callback.message.message_id,
                 media=InputMediaPhoto(
-                    media=get_photo(name=10),
+                    media=get_photo(name='buy'),
                     caption='🟢 Поздравляю!\n'
                                  'Обучение оплачено полностью❤️'
                 ))
@@ -103,9 +97,9 @@ async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback
                 chat_id=callback.from_user.id,
                 message_id=callback.message.message_id,
                 media=InputMediaPhoto(
-                    media=get_photo(name=10),
+                    media=get_photo(name='buy'),
                     caption='🟢 Поздравляю! Оплата прошла!\n'
-                                 'Ожидайте сообщение на почту и звонок от администратора, '
+                                 'Ожидайте сообщение или звонок от администратора, '
                             'с вашими данными для обучения📩, Автошкола создала для вас Личный Кабинет '
                 )
             )

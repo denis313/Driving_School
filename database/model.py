@@ -22,8 +22,7 @@ class Users(Base):
     adult = mapped_column(Boolean)
     buy = mapped_column(Boolean, default=False)
     prepayment = mapped_column(Boolean, default=False)
-    email: Mapped[str] = mapped_column(nullable=True)
-    name: Mapped[str] = mapped_column(nullable=True)
+    fio: Mapped[str] = mapped_column(nullable=True)
     phone: Mapped[str] = mapped_column(nullable=True)
     end_date = mapped_column(Date)
 

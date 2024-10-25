@@ -54,49 +54,48 @@ def keyboard_back(call):
     return buttons
 
 
-def keyboard_page_2():
+def keyboard_start(page):
     page_2 = InlineKeyboardBuilder()
-    page_2.row(*[(InlineKeyboardButton(text='Полетели ✈', callback_data='page_2')),
+    page_2.row(*[(InlineKeyboardButton(text='Запись на обучение ✈', callback_data=page)),
                  (InlineKeyboardButton(text='Тех. Поддержка🚨', callback_data='help'))], width=1)
 
     return page_2.as_markup()
 
 
-def keyboard_page_3():
-    page_3 = InlineKeyboardBuilder()
-    page_3.row(*[(InlineKeyboardButton(text='Как нас найти 🔜', callback_data='page_3'))], width=1)
-
-    return page_3.row(*next_photo(mg='Фото Автодрома🚘', cal='next_1')).row(*next_photo(mg='Тех. Поддержка🚨', cal='help')).as_markup()
-
-
-def keyboard_page_4(mg_text: str, mg_cal):
+def keyboard_about_us():
     page_4 = InlineKeyboardBuilder()
-    page_4.row(*[(InlineKeyboardButton(text='Запись на обучение 🚀', callback_data='page_4'))], width=1)
+    page_4.row(*[(InlineKeyboardButton(text='Информация о нас 🛞', callback_data='form'))], width=1)
 
-    return page_4.row(*next_photo(mg=mg_text, cal=mg_cal)).row(*keyboard_back(call='page_2')).as_markup()
+    return page_4.row(*keyboard_back(call='about_us')).as_markup()
+
+def next_stap():
+    page_3 = InlineKeyboardBuilder()
+    page_3.row(*[(InlineKeyboardButton(text='✅ Удаленно подписать Договор', callback_data='contract'))], width=1)
+
+    return page_3.row(*next_photo(mg='Тех. Поддержка🚨', cal='help')).as_markup()
 
 
-def keyboard_page_5():
-    page_5 = InlineKeyboardBuilder()
-    page_5.row(*[(InlineKeyboardButton(text='1. Подписать Договор📑', callback_data='page_5'))], width=1)
+# def keyboard_page_5():
+#     page_5 = InlineKeyboardBuilder()
+#     page_5.row(*[(InlineKeyboardButton(text='1. Подписать Договор📑', callback_data='page_6'))], width=1)
+#
+#     return page_5.row(*keyboard_back(call='page_3')).as_markup()
 
-    return page_5.row(*keyboard_back(call='page_3')).as_markup()
 
-
-def keyboard_page_6():
+def sign_contract():
     page_6 = InlineKeyboardBuilder()
-    page_6.row(*[(InlineKeyboardButton(text='✅ Согласен на обработку данных', callback_data='page_6'))], width=1)
+    page_6.row(*[(InlineKeyboardButton(text='Следующий шаг 🔜', callback_data='about_us'))], width=1)
 
-    return page_6.row(*keyboard_back(call='page_4')).as_markup()
+    return page_6.as_markup()
 
 
 
-def keyboard_page_7():
-    page_7 = InlineKeyboardBuilder()
-    page_7.row(*[(InlineKeyboardButton(text='✅ Да, мне уже 18', callback_data='adult')),
+def age():
+    kb = InlineKeyboardBuilder()
+    kb.row(*[(InlineKeyboardButton(text='✅ Да, мне уже 18', callback_data='adult')),
                  (InlineKeyboardButton(text='❌ Нет, мне от 16 до 18', callback_data='no_adult'))], width=2)
 
-    return page_7.row(*keyboard_back(call='page_5')).as_markup()
+    return kb.row(*keyboard_back(call='about_us')).as_markup()
 
 
 def keyboard_page_8(page: str, name: str):
@@ -106,9 +105,10 @@ def keyboard_page_8(page: str, name: str):
     return page_8.row(*keyboard_back(call='page_6')).as_markup()
 
 
-def keyboard_page_9(page):
+def keyboard_doc(page: str, url_doc: str):
     yes = InlineKeyboardBuilder()
-    yes.row(*[(InlineKeyboardButton(text='Договор отправил ✔️', callback_data='page_9'))])
+    yes.row(*[(InlineKeyboardButton(text='Ваш Договор 📑', url=url_doc)),
+              (InlineKeyboardButton(text='Договор отправил ✔️', callback_data='doc_sent'))], width=1)
 
     return yes.row(*keyboard_back(call=page)).as_markup()
 
@@ -126,10 +126,10 @@ def keyboard_buy():
     buy = InlineKeyboardBuilder()
     buy.row(
         *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
-          (InlineKeyboardButton(text='Оплата частями', callback_data='parts'))],
+          (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
         width=1)
 
-    return buy.row(*keyboard_back(call='page_8')).as_markup()
+    return buy.row(*keyboard_back(call='about_us')).as_markup()
 
 
 # def keyboard_buy():
@@ -175,7 +175,9 @@ def next_photo(mg: str, cal):
     return button
 
 
-contact_keyboard = ReplyKeyboardBuilder().add(KeyboardButton(text="📱 Отправить Телефон", request_contact=True))
+contact_keyboard = ReplyKeyboardBuilder().add(*[KeyboardButton(text="📱 Отправить Телефон", request_contact=True),
+                                                KeyboardButton(text="Отправить ФИО👤")
+                                                ])
 
 
 def admin_kb():

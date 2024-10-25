@@ -37,3 +37,11 @@ def provider_token_yookassa(path: str | None = None) -> str:
     env.read_env(path)
     token = env('provider_token_yookassa')
     return token
+
+
+def yookassa(path: str | None = None) -> tuple:
+    env = environs.Env()
+    env.read_env(path)
+    account_id = env('account_id')
+    secret_key = env('secret_key')
+    return account_id, secret_key

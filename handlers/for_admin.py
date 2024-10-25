@@ -9,7 +9,7 @@ from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
 from keyboards import CallbackFactory, keyboard_buy, admin_kb
 from lexicon import lexicon
-from service import get_photo, send_link
+from service import get_photo, send_link, filter_url
 
 router = Router()
 router.message.filter(IsAdmin())
@@ -23,7 +23,7 @@ async def payments(callback: CallbackQuery, callback_data: CallbackFactory, bot:
         chat_id=callback_data.user_id,
         message_id=callback_data.mg,
         media=InputMediaPhoto(
-            media=get_photo(name=10),
+            media=get_photo(name='buy'),
             caption=lexicon['buy']
         ),
         reply_markup=keyboard_buy())
@@ -53,12 +53,21 @@ async def get_links(message: Message, state: FSMContext):
 async def add_list(message: Message, state: FSMContext):
     await state.update_data(links=message.text)
     data = await state.get_data()
+    valid_link = False
+    mg = 'Ссылки не приняты ❌'
     for link in data['links'].split(','):
-        flag = await send_link(status=data['status'], link=link)
-        if flag is False:
-            await db_manager.add_link(link={'status': data['status'], 'link': link.strip()})
+        if filter_url(url=link):
+            flag = await send_link(status=data['status'], link=link)
+            if flag is False:
+                await db_manager.add_link(link={'status': data['status'], 'link': link.strip()})
+            valid_link = True
+        else:
+            await message.answer(f'Похоже что вы отправили что-то не то, это <b>{link}</b> не ссылка')
     await state.clear()
-    await message.answer('Ссылки приняты✅')
+    if valid_link:
+        mg = 'Ссылки приняты✅'
+    await message.answer(mg)
+
 
 
 @router.callback_query(F.data == 'sent_links')
