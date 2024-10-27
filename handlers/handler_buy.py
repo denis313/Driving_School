@@ -91,7 +91,8 @@ async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback
                 ))
         if user.reg is False:
             await bot.send_message(chat_id=admin_id(),
-                                   text=f'Зарегистрировался новый пользователь, phone={user.phone}')
+                                   text=f'<b>🚨Обучение оплатил пользователь, {user.fio}.\n'
+                                        f'Его номер телефона: {user.phone}🚨</b>')
             await db_manager.update_user(user_id=callback.from_user.id, user_data={'reg': True})
             await bot.edit_message_media(
                 chat_id=callback.from_user.id,

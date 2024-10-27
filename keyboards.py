@@ -70,7 +70,8 @@ def keyboard_about_us():
 
 def next_stap():
     page_3 = InlineKeyboardBuilder()
-    page_3.row(*[(InlineKeyboardButton(text='✅ Удаленно подписать Договор', callback_data='contract'))], width=1)
+    page_3.row(*[(InlineKeyboardButton(text='✅ Удаленно подписать Договор', callback_data='contract')),
+                  (InlineKeyboardButton(text='Изменить мою анкету🖊', callback_data='redact'))], width=1)
 
     return page_3.row(*next_photo(mg='Тех. Поддержка🚨', cal='help')).as_markup()
 

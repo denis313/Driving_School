@@ -43,7 +43,7 @@ class FioPhone(StatesGroup):
     mg_id = State()
 
 
-@router.callback_query(F.data == 'form')
+@router.callback_query(F.data.in_({'form', 'redact'}))
 async def form(callback: CallbackQuery, state: FSMContext):
     await bot.edit_message_media(
         chat_id=callback.message.chat.id,
@@ -64,7 +64,11 @@ async def fio_form(message: Message, state: FSMContext):
     user = data['fio_phone'].split()
     await state.clear()
     fio, phone = ' '.join(user[:3]), user[-1]
-    await db_manager.add_user(user_data={'user_id': message.from_user.id, 'fio': fio, 'phone': phone})
+    users = await db_manager.get_user(user_id=message.from_user.id)
+    if users:
+        await db_manager.update_user(user_id=message.from_user.id, user_data={'fio': fio, 'phone': phone})
+    else:
+        await db_manager.add_user(user_data={'user_id': message.from_user.id, 'fio': fio, 'phone': phone})
     await message.delete()
     await bot.send_message(chat_id=admin_id(), text=lexicon['user_form'].format(fio=fio, phone=phone))
     await bot.edit_message_media(
