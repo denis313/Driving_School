@@ -24,7 +24,7 @@ async def main():
     dp = Dispatcher()
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_pay, 'cron', hour=1, minute=37)
+    # scheduler.add_job(check_pay, 'cron', hour=14, minute=59)
     scheduler.add_job(check_link, 'cron', hour=7, minute=0)
     scheduler.start()
 

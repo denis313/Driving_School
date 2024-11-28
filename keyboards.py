@@ -126,11 +126,18 @@ def keyboard_prepayment(url:str, id_payment, page):
 def keyboard_buy():
     buy = InlineKeyboardBuilder()
     buy.row(
-        *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
-          (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
+        *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa'))],
         width=1)
 
     return buy.row(*keyboard_back(call='about_us')).as_markup()
+# def keyboard_buy():
+#     buy = InlineKeyboardBuilder()
+#     buy.row(
+#         *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
+#           (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
+#         width=1)
+#
+#     return buy.row(*keyboard_back(call='about_us')).as_markup()
 
 
 # def keyboard_buy():
