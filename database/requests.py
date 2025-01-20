@@ -91,7 +91,7 @@ class DatabaseManager:
             if link:
                 return link
             else:
-                await send_admin(status=status)
+                # await send_admin(status=status)
                 return None
 
     async def delete_link(self, link_id):
@@ -110,7 +110,7 @@ class DatabaseManager:
                 return links
         except SQLAlchemyError as e:
             logging.error(f'Error occurred while adding user: {str(e)}')
-            await send_admin(status=status)
+            # await send_admin(status=status)
             return None
 
     async def get_users_links(self):
