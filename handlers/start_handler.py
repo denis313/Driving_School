@@ -114,9 +114,8 @@ async def add_phone_number(message: Message, state: FSMContext):
         reply_markup=sign_contract())
     # await bot.delete_message(message.chat.id, message.message_id)
 
-    for user_id in admin_id():
-        await bot.send_message(chat_id=user_id,
-                               text=lexicon['user_form'].format(fio=fio, phone=phone, about_us=about_us))
+    await bot.send_message(chat_id=admin_id(),
+                           text=lexicon['user_form'].format(fio=fio, phone=phone, about_us=about_us))
     await state.clear()
 
 
@@ -222,10 +221,10 @@ async def handle_next_photo(callback: CallbackQuery):
         kb = back(page='about_us')
         mg = lexicon['wait']
         photo = get_photo(name='wait')
-        for user_id in admin_id():
-            await bot.send_message(chat_id=user_id, text=lexicon['for_admin_2'],
-                               reply_markup=allow_payment(user_id=callback.from_user.id,
-                                                          mg_id=callback.message.message_id))
+    
+        await bot.send_message(chat_id=admin_id(), text=lexicon['for_admin_2'],
+                           reply_markup=allow_payment(user_id=callback.from_user.id,
+                                                      mg_id=callback.message.message_id))
     else:
         kb = keyboard_buy()
         mg = lexicon['buy']
