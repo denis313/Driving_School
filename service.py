@@ -1,10 +1,14 @@
+import logging
 import re
 import uuid
+
 
 from aiogram.types import Message, CallbackQuery
 
 from aiogram.types import FSInputFile
 from aiogram.filters import BaseFilter
+from requests import HTTPError
+
 from bot import bot
 from config import db_config, yookassa
 from database.requests import DatabaseManager
@@ -35,10 +39,12 @@ async def send_link(status: bool, link: str):
 class IsPhone(BaseFilter):
     async def __call__(self, message: Message):
         try:
-            match = re.fullmatch(r'\+7\d{3}\d{7}', message.text.strip()[-1])
-            return bool(match)
+            if message.contact.phone_number:
+                return True
         except AttributeError:
-            return False
+            match = re.fullmatch(r'\+7\d{3}\d{7}', message.text)
+            print(message.text, match)
+            return bool(match)
 
 
 
@@ -60,26 +66,34 @@ def create_payment(amount: int, description: str, chat_id: int):
     account_id, secret_key = yookassa()
     Configuration.account_id = account_id
     Configuration.secret_key = secret_key
-    payment = Payment.create({
-        "amount": {
-            "value": f"{amount}.00",
-            "currency": "RUB"
-        },
-        "confirmation": {
-            "type": "redirect",
-            "return_url": "https://t.me/Avtokosmos17_bot"
-        },
-        "payment_method_data": {
-            "type": "sbp"
-        },
-        "capture": True,
-        "metadata": {
-            'chat_id': chat_id
-        },
-        "description": description
-    }, uuid.uuid4())
-    print(payment)
-    return payment.confirmation.confirmation_url, payment.id
+    try:
+        payment = Payment.create({
+            "amount": {
+                "value": f"{amount}.00",
+                "currency": "RUB"
+            },
+            "confirmation": {
+                "type": "redirect",
+                "return_url": "https://t.me/Avtokosmos17_bot"
+            },
+            "payment_method_data": {
+                "type": "sbp"
+            },
+            "capture": True,
+            "metadata": {
+                'chat_id': chat_id
+            },
+            "description": description
+        }, uuid.uuid4())
+        logging.debug(f"Confirmation URL: {payment.confirmation.confirmation_url}")
+        logging.debug(f"Payment ID: {payment.id}")
+        return payment.confirmation.confirmation_url, payment.id
+    except HTTPError as e:
+        # Логирование подробного ответа
+        error_response = e.response.json()
+        logging.error(f"Ошибка HTTP: {e}")
+        logging.error(f"Детали ошибки: {error_response}")
+        raise
 
 
 async def get_document(user_id: int):

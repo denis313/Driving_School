@@ -191,7 +191,8 @@ contact_keyboard = ReplyKeyboardBuilder().add(*[KeyboardButton(text="📱 Отп
 def admin_kb():
     kb = InlineKeyboardBuilder()
     kb.row(*[InlineKeyboardButton(text='Остаток ссылок 📲', callback_data='rest_links'),
-             InlineKeyboardButton(text='Отправленные ссылки 📲', callback_data='sent_links')], width=1)
+             InlineKeyboardButton(text='Отправленные ссылки 📲', callback_data='sent_links'),
+             InlineKeyboardButton(text='Изменить стоимость услуг 💵', callback_data='update_prices')], width=1)
     return kb.as_markup()
 
 
@@ -202,3 +203,5 @@ def kb_buy(url:str, id_payment, page):
                                   callback_data=Pay(pay_id=id_payment).pack())],
            width=1)
     return kb.row(*keyboard_back(call=page)).as_markup()
+
+phone_keyboard = ReplyKeyboardBuilder().add(KeyboardButton(text='Отправить номер телефона', request_contact=True))

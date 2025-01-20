@@ -1,3 +1,5 @@
+from typing import Any, Dict, Coroutine
+
 from aiogram import Router, Bot, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -118,3 +120,30 @@ async def payments(callback: CallbackQuery, bot: Bot):
                                         text='Ссылок нет.', reply_markup=admin_kb())
     except Exception as e:
         print(f"Ошибка: {e}")
+
+
+class Prices(StatesGroup):
+    prepayment = State()
+    price = State()
+
+
+@router.callback_query(F.data == 'update_prices')
+async def update(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    await bot.send_message(chat_id=callback.from_user.id, text='Введите сумму предоплаты для получения договора:')
+    await state.set_state(Prices.prepayment)
+
+
+@router.message(StateFilter(Prices.prepayment), F.text.isdigit())
+async def prepayment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(prepayment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму полного обучения:')
+    await state.set_state(Prices.price)
+
+
+@router.message(StateFilter(Prices), F.text.isdigit())
+async def price(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(price=message.text)
+    data = await state.get_data()
+    await db_manager.update_prices(new_prices={'prepayment': int(data['prepayment']), 'price': int(data['price'])})
+    await bot.send_message(chat_id=message.from_user.id, text='Цены были приняты ✅')
+    await state.clear()

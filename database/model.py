@@ -24,6 +24,7 @@ class Users(Base):
     prepayment = mapped_column(Boolean, default=False)
     fio: Mapped[str] = mapped_column(nullable=True)
     phone: Mapped[str] = mapped_column(nullable=True)
+    about_us: Mapped[str] = mapped_column(nullable=True)
     end_date = mapped_column(Date)
 
     def __repr__(self) -> str:
@@ -41,3 +42,15 @@ class Links(Base):
     def __repr__(self) -> str:
         ...
         return f"LiNKS: id: {self.id_link},status: {self.status}, link: {self.link}"
+
+
+class Prices(Base):
+    __tablename__ = 'prices'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_value: Mapped[int] = mapped_column()
+    prepayment: Mapped[int] = mapped_column(default=0)
+    price: Mapped[int] = mapped_column(default=0)
+
+    def __repr__(self) -> str:
+        ...
+        return f"Price: id: {self.id_value}, prepayment {self.prepayment}, price: {self.price}"

@@ -6,14 +6,14 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from bot import bot
 from config import admin_id
-from database.model import Base, Users, Links
+from database.model import Base, Users, Links, Prices
 from keyboards import keyboard_friend
 from lexicon import lexicon
 
 
 async def send_admin(status: bool):
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
-    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+    await bot.send_message(chat_id=admin_id()[0], text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
 
 
 class DatabaseManager:
@@ -122,3 +122,19 @@ class DatabaseManager:
             all_users = result.scalars()
             users = [user for user in all_users]
             return users
+
+        # get user
+    async def get_prices(self) -> Prices | None:
+        async with self.async_session() as session:
+            result = await session.execute(select(Prices).where(Prices.id_value == 1))
+            prices = result.scalar()
+            logging.debug(f'Get prices: {prices.prepayment}, {prices.price}')
+            return prices if prices else None
+
+    # update user
+    async def update_prices(self, new_prices) -> None:
+        async with self.async_session() as session:
+            stmt = update(Prices).where(Prices.id_value == 1).values(new_prices)
+            await session.execute(stmt)
+            await session.commit()
+            logging.debug(f'Update prices')
