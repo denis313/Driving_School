@@ -125,6 +125,8 @@ async def payments(callback: CallbackQuery, bot: Bot):
 class Prices(StatesGroup):
     prepayment = State()
     price = State()
+    first_payment = State()
+    second_payment = State()
 
 
 @router.callback_query(F.data == 'update_prices')
@@ -140,10 +142,32 @@ async def prepayment(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(Prices.price)
 
 
-@router.message(StateFilter(Prices), F.text.isdigit())
+@router.message(StateFilter(Prices.price), F.text.isdigit())
 async def price(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(price=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму первого платежа:')
+    await state.set_state(Prices.first_payment)
+
+@router.message(StateFilter(Prices.first_payment), F.text.isdigit())
+async def first_payment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(first_payment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму второго платежа:')
+    await state.set_state(Prices.second_payment)
+
+
+@router.message(StateFilter(Prices.second_payment), F.text.isdigit())
+async def second_payment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(second_payment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Все суммы были приняты ✅')
     data = await state.get_data()
-    await db_manager.update_prices(new_prices={'prepayment': int(data['prepayment']), 'price': int(data['price'])})
-    await bot.send_message(chat_id=message.from_user.id, text='Цены были приняты ✅')
+    await db_manager.update_prices(new_prices={'prepayment': int(data['prepayment']),
+                                               'price': int(data['price']),
+                                               'first_payment': int(data['first_payment']),
+                                               'second_payment': int(data['second_payment'])})
     await state.clear()
+
+
+@router.message(StateFilter(Prices))
+async def not_number(message: Message):
+    await message.reply(text='Вы ввели не число❌\n'
+                             'Введите число')

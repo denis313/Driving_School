@@ -27,16 +27,16 @@ db_manager = DatabaseManager(dsn=dsn)
 @router.callback_query(F.data.in_({'yookassa', 'yookassa_parts'}))
 async def buy_subscribe(callback: CallbackQuery, bot: Bot):
     user = await db_manager.get_user(user_id=callback.from_user.id)
-    prices = await db_manager.get_prices()
     if not user or user.status is False:
         mg = lexicon['parts']
         if callback.data == 'yookassa':
-            cost = prices.price - user.total # total = 2500
+            cost = user.price - user.total # total = 2500
             mg = 'После оплаты обязательно нажмите кнопку <b>Проверка оплаты✅</b>, чтобы убедиться, что оплата успешно прошла и обучение может начаться без задержек.'
         elif callback.data == 'yookassa_parts':
-            cost = prices.prepayment  # cost = 5000
-            if user.total == prices.prepayment:
-                cost = prices.price - prices.prepayment
+            if user.total == user.prepayment:
+                cost = user.first_payment - user.prepayment
+            elif user.total == user.first_payment:
+                cost = user.second_payment
         url, id_prepayment = create_payment(amount=cost,
                                             description='Оплата обучения в Автошколе',
                                             chat_id=callback.from_user.id)
@@ -65,8 +65,32 @@ async def buy_subscribe(callback: CallbackQuery, bot: Bot):
 async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback_data: Pay):
     user = await db_manager.get_user(user_id=callback.from_user.id)
     payment = yookassa.Payment.find_one(callback_data.pay_id)
-    prices = await db_manager.get_prices()
     if payment.status == 'succeeded':
+        text = ('🟢 Поздравляю! Оплата прошла!\nОжидайте сообщение или звонок от администратора,'
+                'с вашими данными для обучения📩, Автошкола создала для вас Личный Кабинет ')
+        if user.price == payment.amount.value + user.total:
+            data = {'total': user.price, 'end_date': None, 'status': True}
+        elif user.first_payment == payment.amount.value + user.total:
+            text += '\n\nВы оплатили первую часть суммы, через месяц надо будет оплатить вторую часть'
+            start_date = date.today()
+            end_date = start_date + timedelta(days=30)
+            data = {'total': user.first_payment, 'end_date':end_date}
+        if user.reg is False:
+            await bot.send_message(chat_id=admin_id(),
+                               text=f'<b>🚨Обучение оплатил пользователь, {user.fio}.\n'
+                                    f'Его номер телефона: {user.phone}🚨</b>')
+
+            await db_manager.update_user(user_id=callback.from_user.id, user_data={'reg': True})
+        await bot.edit_message_media(
+            chat_id=callback.from_user.id,
+            message_id=callback.message.message_id,
+            media=InputMediaPhoto(
+                media=get_photo(name='buy'),
+                caption=text
+            )
+        )
+        await db_manager.update_user(user_id=user.user_id, user_data=data)
+
         # if (payment.amount.value == str(prices.prepayment) or str(prices.price-prices.prepayment)) and user.total + int(payment.amount.value) != 250: # successfull = 5000 user_total + 5000 != 25000
         #     start_date = date.today()
         #     end_date = start_date + timedelta(days=30)
@@ -85,31 +109,14 @@ async def successful_payment_handler(callback: CallbackQuery, bot: Bot, callback
         #     )
         # else:
         #     print(2222)
-        await db_manager.update_user(user_id=callback.from_user.id, user_data={'status': True,
-                                                                              'total': prices.price,
-                                                                              'end_date': None})
-            # await bot.edit_message_media(
-            #     chat_id=callback.from_user.id,
-            #     message_id=callback.message.message_id,
-            #     media=InputMediaPhoto(
-            #         media=get_photo(name='buy'),
-            #         caption='🟢 Поздравляю!\n'
-            #                      'Обучение оплачено полностью❤️'
-            #     ))
-        if user.reg is False:
-            for user_id in admin_id():
-                await bot.send_message(chat_id=user_id,
-                                   text=f'<b>🚨Обучение оплатил пользователь, {user.fio}.\n'
-                                        f'Его номер телефона: {user.phone}🚨</b>')
-
-            await db_manager.update_user(user_id=callback.from_user.id, user_data={'reg': True})
-            await bot.edit_message_media(
-                chat_id=callback.from_user.id,
-                message_id=callback.message.message_id,
-                media=InputMediaPhoto(
-                    media=get_photo(name='buy'),
-                    caption='🟢 Поздравляю! Оплата прошла!\n'
-                                 'Ожидайте сообщение или звонок от администратора, '
-                            'с вашими данными для обучения📩, Автошкола создала для вас Личный Кабинет '
-                )
-            )
+        # await db_manager.update_user(user_id=callback.from_user.id, user_data={'status': True,
+        #                                                                       'total': prices.price,
+        #                                                                       'end_date': None})
+        # await bot.edit_message_media(
+        #     chat_id=callback.from_user.id,
+        #     message_id=callback.message.message_id,
+        #     media=InputMediaPhoto(
+        #         media=get_photo(name='buy'),
+        #         caption='🟢 Поздравляю!\n'
+        #                      'Обучение оплачено полностью❤️'
+        #     ))

@@ -85,7 +85,7 @@ def next_stap():
 
 def sign_contract():
     page_6 = InlineKeyboardBuilder()
-    page_6.row(*[(InlineKeyboardButton(text='Следующий шаг 🔜', callback_data='about_us'))], width=1)
+    page_6.row(*[(InlineKeyboardButton(text='🔜 Следующий шаг 🔜', callback_data='about_us'))], width=1)
 
     return page_6.as_markup()
 
@@ -123,21 +123,21 @@ def keyboard_prepayment(url:str, id_payment, page):
     return kb.row(*keyboard_back(call=page)).as_markup()
 
 
-def keyboard_buy():
-    buy = InlineKeyboardBuilder()
-    buy.row(
-        *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa'))],
-        width=1)
-
-    return buy.row(*keyboard_back(call='about_us')).as_markup()
 # def keyboard_buy():
 #     buy = InlineKeyboardBuilder()
 #     buy.row(
-#         *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
-#           (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
+#         *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa'))],
 #         width=1)
 #
 #     return buy.row(*keyboard_back(call='about_us')).as_markup()
+def keyboard_buy():
+    buy = InlineKeyboardBuilder()
+    buy.row(
+        *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
+          (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
+        width=1)
+
+    return buy.row(*keyboard_back(call='about_us')).as_markup()
 
 
 # def keyboard_buy():

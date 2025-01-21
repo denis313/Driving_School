@@ -74,6 +74,7 @@ async def fio_form(message: Message, state: FSMContext):
         reply_markup=None)
     await state.set_state(FioPhone.phone)
     await message.answer(text=lexicon['phone'], reply_markup=phone_keyboard.as_markup(resize_keyboard=True))
+    await message.delete()
 
 
 @router.message(StateFilter(FioPhone.fio))
@@ -117,6 +118,7 @@ async def add_phone_number(message: Message, state: FSMContext):
     await bot.send_message(chat_id=admin_id(),
                            text=lexicon['user_form'].format(fio=fio, phone=phone, about_us=about_us))
     await state.clear()
+    await message.delete()
 
 
 @router.message(StateFilter(FioPhone.phone))
@@ -196,7 +198,12 @@ async def page_eight(callback: CallbackQuery, callback_data: IsIdPrepayment):
     try:
         payment = yookassa.Payment.find_one(callback_data.payment_id)
         if payment.status == 'succeeded':
-            await db_manager.update_user(user_id=callback.from_user.id, user_data={'total': prices.prepayment})
+            data = await db_manager.get_prices()
+            await db_manager.update_user(user_id=callback.from_user.id, user_data={'total': data.prepayment,
+                                                                                   'prepayment': data.prepayment,
+                                                                                   'price': data.price,
+                                                                                   'first_payment': data.first_payment,
+                                                                                   'second_payment': data.second_payment})
             text, kb, photo = await get_document(user_id=callback.from_user.id)
         else:
             text = lexicon['prepayment_failed']
@@ -221,7 +228,6 @@ async def handle_next_photo(callback: CallbackQuery):
         kb = back(page='about_us')
         mg = lexicon['wait']
         photo = get_photo(name='wait')
-    
         await bot.send_message(chat_id=admin_id(), text=lexicon['for_admin_2'],
                            reply_markup=allow_payment(user_id=callback.from_user.id,
                                                       mg_id=callback.message.message_id))
