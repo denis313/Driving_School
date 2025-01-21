@@ -13,7 +13,7 @@ from lexicon import lexicon
 
 async def send_admin(status: bool):
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
-    await bot.send_message(chat_id=admin_id()[0], text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
 
 
 class DatabaseManager:
@@ -91,7 +91,7 @@ class DatabaseManager:
             if link:
                 return link
             else:
-                # await send_admin(status=status)
+                await send_admin(status=status)
                 return None
 
     async def delete_link(self, link_id):
@@ -110,7 +110,7 @@ class DatabaseManager:
                 return links
         except SQLAlchemyError as e:
             logging.error(f'Error occurred while adding user: {str(e)}')
-            # await send_admin(status=status)
+            await send_admin(status=status)
             return None
 
     async def get_users_links(self):
