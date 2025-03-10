@@ -30,7 +30,9 @@ class IsIdPrepayment(CallbackData, prefix='id', sep=':'):
 
 class Pay(CallbackData, prefix='pay', sep=':'):
     pay_id: str
-
+    second_pay: str
+    status: bool
+    id_link: str
 
 def bs_64(payment):
     uuid_obj = uuid.UUID(payment)
@@ -133,8 +135,10 @@ def keyboard_prepayment(url:str, id_payment, page):
 def keyboard_buy():
     buy = InlineKeyboardBuilder()
     buy.row(
-        *[(InlineKeyboardButton(text='Единоразовая оплата', callback_data='yookassa')),
-          (InlineKeyboardButton(text='Оплата частями', callback_data='yookassa_parts'))],
+        *[(InlineKeyboardButton(text='Оплатить 100% сейчас', callback_data='now_100')),
+          (InlineKeyboardButton(text='Оплатить 100% ДОЛЯМИ', callback_data='shares_100')),
+          (InlineKeyboardButton(text='Оплатить 50% сейчас 50% ДОЛЯМИ', callback_data='now_50')),
+          (InlineKeyboardButton(text='Оплатить Индивидуально', callback_data='individually'))],
         width=1)
 
     return buy.row(*keyboard_back(call='about_us')).as_markup()
@@ -192,16 +196,39 @@ def admin_kb():
     kb = InlineKeyboardBuilder()
     kb.row(*[InlineKeyboardButton(text='Остаток ссылок 📲', callback_data='rest_links'),
              InlineKeyboardButton(text='Отправленные ссылки 📲', callback_data='sent_links'),
-             InlineKeyboardButton(text='Изменить стоимость услуг 💵', callback_data='update_prices')], width=1)
+             InlineKeyboardButton(text='Изменить стоимость услуг 💵', callback_data='update_prices'),
+             InlineKeyboardButton(text='Добавить ссылки для Долей💸', callback_data='add_links')], width=1)
     return kb.as_markup()
 
 
-def kb_buy(url:str, id_payment, page):
+def kb_buy(url:str, id_payment, page, second_payment, status, id_link):
     kb = InlineKeyboardBuilder()
     kb.row(*[InlineKeyboardButton(text='Оплата 💳', url=url),
              InlineKeyboardButton(text='Проверка оплаты ✅',
-                                  callback_data=Pay(pay_id=id_payment).pack())],
+                                  callback_data=Pay(pay_id=id_payment,
+                                                    second_pay=second_payment,
+                                                    status=status,
+                                                    id_link=id_link).pack())],
            width=1)
     return kb.row(*keyboard_back(call=page)).as_markup()
 
 phone_keyboard = ReplyKeyboardBuilder().add(KeyboardButton(text='Отправить номер телефона', request_contact=True))
+
+def keyboard_link(url_link: str):
+    kb = InlineKeyboardBuilder()
+    kb.row(*[(InlineKeyboardButton(text='Сервис Долями 📑', url=url_link))], width=1)
+
+    return kb.row().as_markup()
+
+def exactly_kb():
+    kb = InlineKeyboardBuilder()
+    kb.row(*[InlineKeyboardButton(text='Выбрать предложение', callback_data='exactly'),
+             InlineKeyboardButton(text='Назад 🔙', callback_data='doc_sent')], width=1)
+    return kb.as_markup()
+
+
+def exactly_shares_kb():
+    kb = InlineKeyboardBuilder()
+    kb.row(*[InlineKeyboardButton(text='Выбрать предложение', callback_data='shares'),
+             InlineKeyboardButton(text='Назад 🔙', callback_data='doc_sent')], width=1)
+    return kb.as_markup()

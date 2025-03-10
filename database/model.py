@@ -21,6 +21,8 @@ class Users(Base):
     status = mapped_column(Boolean, default=False)
     doc: Mapped[str] = mapped_column(nullable=True)
     request = mapped_column(Boolean)
+    tb_link = mapped_column(Boolean, default=True)
+    link: Mapped[str] = mapped_column(nullable=True)
     reg = mapped_column(Boolean, default=False)
     adult = mapped_column(Boolean)
     buy = mapped_column(Boolean, default=False)
@@ -59,3 +61,15 @@ class Prices(Base):
     def __repr__(self) -> str:
         ...
         return f"Price: id: {self.id_value}, prepayment {self.prepayment}, price: {self.price}"
+
+
+class TBank_Links(Base):
+    __tablename__ = 'tbanklinks'
+
+    id_link: Mapped[int] = mapped_column(primary_key=True)
+    percent: Mapped[int] = mapped_column()
+    link: Mapped[str] = mapped_column()
+
+    def __repr__(self) -> str:
+        ...
+        return f"Link: id: {self.id_link}, link: {self.link}"

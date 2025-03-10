@@ -45,3 +45,14 @@ async def check_link():
         logging.debug(f'Check_link')
         if links == []:
             await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=item), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+
+
+async def check_tblink():
+    d = [100, 50]
+    for i in d:
+        links = await db_manager.get_tblinks(percent=i)
+        logging.debug(f'Check_link')
+        if links == []:
+            await bot.send_message(chat_id=admin_id(), text=f'Закончились ссылки для сервиса Долями - {i}%\n'
+                                                            'Нажмите кнопку - "Добавить ссылки для Долей💸"')
+

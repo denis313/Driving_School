@@ -14,7 +14,7 @@ from config import db_config, yookassa
 from database.requests import DatabaseManager
 from yookassa import Configuration, Payment
 
-from keyboards import keyboard_doc, back
+from keyboards import keyboard_doc, back, keyboard_link
 from lexicon import lexicon
 
 dsn = db_config()
@@ -112,3 +112,19 @@ async def get_document(user_id: int):
             kb = back(page='about_us')
             await db_manager.update_user(user_id=user_id, user_data={'request': True})
     return text, kb, photo
+
+async def send_tb_link(link, p_t: int):
+    users = await db_manager.get_users()
+    for user in users:
+        if user.tb_link is False:
+            if p_t == 100:
+                mg = lexicon['pay_100']
+            else:
+                mg = lexicon['pay_F']
+            await db_manager.update_user(user_id=user.user_id, user_data={'tb_link': True, 'link': link})
+            await bot.send_message(chat_id=user.user_id,
+                                   text=mg,
+                                   reply_markup=keyboard_link(url_link=link))
+            return True
+    else:
+        return False

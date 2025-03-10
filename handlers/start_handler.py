@@ -173,10 +173,10 @@ async def page_seven(callback: CallbackQuery):
         kb = keyboard_prepayment(url=url, id_payment=id_payment, page=page)
         if callback.data == 'adult':
             adult = True
-            doc = FSInputFile('handlers/document.pdf', filename='Образец Договора.pdf')
+            doc = FSInputFile('handlers/образец_1.pdf', filename='Образец Договора.pdf')
         else:
             adult = False
-            doc = FSInputFile('handlers/document_2.pdf', filename='Образец Договора.pdf')
+            doc = FSInputFile('handlers/образец_2.pdf', filename='Образец Договора.pdf')
         await db_manager.update_user(user_id=callback.from_user.id, user_data={'adult': adult})
         await bot.send_document(chat_id=callback.message.chat.id,
                                 document=doc, reply_markup=ReplyKeyboardRemove())
