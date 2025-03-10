@@ -233,3 +233,4 @@ async def add_list(message: Message, state: FSMContext):
 @router.message(StateFilter(NewLinks.link))
 async def add_list(message: Message, state: FSMContext):
     await message.answer('Похоже что вы отправили что-то не то, проверьте правильность внесения данных')
+
