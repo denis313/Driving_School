@@ -247,7 +247,7 @@ async def handle_next_photo(callback: CallbackQuery):
 
 @router.callback_query(F.data == 'help')
 async def help_handler(callback: CallbackQuery):
-    await bot.send_message(chat_id=callback.from_user.id, text='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79232656553\n'
+    await bot.send_message(chat_id=callback.from_user.id, text='Если у вас возникли проблемы, вы можете позвонить по номеру ☎️Тел +79333399994\n'
                                        'Вам постараются помочь в вашем вопросе')
 
 
