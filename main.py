@@ -4,9 +4,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Dispatcher
 
 from bot import bot
-from check import check_link, check_pay
+from check import check_link, check_pay, check_tblink
 
 from handlers import start_handler, handler_buy, other_handler, for_admin
+from service import create_payment
 
 # Инициализируем логгер модуля
 logger = logging.getLogger(__name__)
@@ -24,8 +25,8 @@ async def main():
     dp = Dispatcher()
 
     scheduler = AsyncIOScheduler()
-    # scheduler.add_job(check_pay, 'cron', hour=14, minute=59)
-    scheduler.add_job(check_link, 'cron', hour=7, minute=0)
+    scheduler.add_job(check_tblink, 'cron', hour=0, minute=0)
+    scheduler.add_job(check_link, 'cron', hour=0, minute=0)
     scheduler.start()
 
     # Регистриуем роутеры в диспетчере

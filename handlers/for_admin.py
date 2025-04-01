@@ -1,3 +1,5 @@
+from typing import Any, Dict, Coroutine
+
 from aiogram import Router, Bot, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -9,7 +11,7 @@ from database.requests import DatabaseManager
 from handlers.filter import IsAdmin
 from keyboards import CallbackFactory, keyboard_buy, admin_kb
 from lexicon import lexicon
-from service import get_photo, send_link, filter_url
+from service import get_photo, send_link, filter_url, send_tb_link
 
 router = Router()
 router.message.filter(IsAdmin())
@@ -118,3 +120,117 @@ async def payments(callback: CallbackQuery, bot: Bot):
                                         text='Ссылок нет.', reply_markup=admin_kb())
     except Exception as e:
         print(f"Ошибка: {e}")
+
+
+class Prices(StatesGroup):
+    prepayment = State()
+    price = State()
+    first_payment = State()
+    second_payment = State()
+
+
+@router.callback_query(F.data == 'update_prices')
+async def update(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    await bot.send_message(chat_id=callback.from_user.id, text='Введите сумму предоплаты для получения договора:')
+    await state.set_state(Prices.prepayment)
+
+
+@router.message(StateFilter(Prices.prepayment), F.text.isdigit())
+async def prepayment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(prepayment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму полного обучения:')
+    await state.set_state(Prices.price)
+
+
+@router.message(StateFilter(Prices.price), F.text.isdigit())
+async def price(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(price=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму первого платежа:')
+    await state.set_state(Prices.first_payment)
+
+@router.message(StateFilter(Prices.first_payment), F.text.isdigit())
+async def first_payment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(first_payment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Введите сумму второго платежа:')
+    await state.set_state(Prices.second_payment)
+
+
+@router.message(StateFilter(Prices.second_payment), F.text.isdigit())
+async def second_payment(message: Message, state: FSMContext, bot: Bot):
+    await state.update_data(second_payment=message.text)
+    await bot.send_message(chat_id=message.from_user.id, text='Все суммы были приняты ✅')
+    data = await state.get_data()
+    await db_manager.update_prices(new_prices={'prepayment': int(data['prepayment']),
+                                               'price': int(data['price']),
+                                               'first_payment': int(data['first_payment']),
+                                               'second_payment': int(data['second_payment'])})
+    await state.clear()
+
+
+@router.message(StateFilter(Prices))
+async def not_number(message: Message):
+    await message.reply(text='Вы ввели не число❌\n'
+                             'Введите число')
+
+@router.message(F.document, IsAdmin())
+async def handle_document(message: Message, bot: Bot):
+    document = message.document
+    if document.file_name.split('.')[0].lower() == 'совершеннолетний':
+        name = 'образец_1'
+    elif document.file_name.split('.')[0].lower() == 'несовершеннолетний':
+        name = 'образец_2'
+    file_id = document.file_id  # ID файла
+    file = await bot.get_file(file_id)  # Получаем объект файла
+    try:
+        # Локальное имя файла
+        file_path = file.file_path
+        destination = f"./handlers/{name}.pdf"
+        await bot.download_file(file_path, destination)
+        # Скачиваем файл
+        await message.reply(f"Файл образец сохранен!")
+    except UnboundLocalError:
+        await message.reply('Название не соответсвует не "Совершеннолетний" и не "Несовершеннолетний"')
+
+
+class NewLinks(StatesGroup):
+    percent = State()
+    link = State()
+
+
+@router.callback_query(F.data == 'add_links')
+async def add_links(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text='Укажите ПРОЦЕНТ, ссылки которых вы будете добавлять и ссылки через пробел\n'
+                                'Пример: 100 https://www.example.com, https://www.example.com')
+    await state.set_state(NewLinks.percent)
+    await state.set_state(NewLinks.link)
+
+
+@router.message(StateFilter(NewLinks.link), F.text.split().len()>= 2)
+async def add_list(message: Message, state: FSMContext):
+    try:
+        data = message.text.split()
+        persent = int(data[0])
+        await state.update_data(percent=int(data[0]))
+        await state.update_data(link=data[1:])
+        data = await state.get_data()
+        mg = 'Ссылки не приняты ❌'
+        for link in data['link']:
+            if filter_url(url=link):
+                flag = await send_tb_link(link, p_t=persent)
+                if flag is False:
+                    await db_manager.add_tblink(link={'percent': data['percent'], 'link': link})
+                valid_link = True
+
+        await state.clear()
+        if valid_link:
+            mg = 'Ссылки приняты✅'
+        await message.answer(mg)
+    except ValueError:
+        await message.answer(f'Похоже что вы отправили что-то не то, это не ссылка')
+
+
+@router.message(StateFilter(NewLinks.link))
+async def add_list(message: Message, state: FSMContext):
+    await message.answer('Похоже что вы отправили что-то не то, проверьте правильность внесения данных')
+

@@ -15,15 +15,21 @@ class Users(Base):
     id_user: Mapped[int] = mapped_column(primary_key=True)
     user_id = mapped_column(BigInteger, nullable=True, unique=True)
     total: Mapped[int] = mapped_column(default=0)
+    price: Mapped[int] = mapped_column(default=0)
+    first_payment: Mapped[int] = mapped_column(default=0)
+    second_payment: Mapped[int] = mapped_column(default=0)
     status = mapped_column(Boolean, default=False)
     doc: Mapped[str] = mapped_column(nullable=True)
     request = mapped_column(Boolean)
+    tb_link = mapped_column(Boolean, default=True)
+    link: Mapped[str] = mapped_column(nullable=True)
     reg = mapped_column(Boolean, default=False)
     adult = mapped_column(Boolean)
     buy = mapped_column(Boolean, default=False)
-    prepayment = mapped_column(Boolean, default=False)
+    prepayment: Mapped[int] = mapped_column( default=0)
     fio: Mapped[str] = mapped_column(nullable=True)
     phone: Mapped[str] = mapped_column(nullable=True)
+    about_us: Mapped[str] = mapped_column(nullable=True)
     end_date = mapped_column(Date)
 
     def __repr__(self) -> str:
@@ -41,3 +47,29 @@ class Links(Base):
     def __repr__(self) -> str:
         ...
         return f"LiNKS: id: {self.id_link},status: {self.status}, link: {self.link}"
+
+
+class Prices(Base):
+    __tablename__ = 'prices'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_value: Mapped[int] = mapped_column()
+    prepayment: Mapped[int] = mapped_column(default=0)
+    price: Mapped[int] = mapped_column(default=0)
+    first_payment: Mapped[int] = mapped_column(default=0)
+    second_payment: Mapped[int] = mapped_column(default=0)
+
+    def __repr__(self) -> str:
+        ...
+        return f"Price: id: {self.id_value}, prepayment {self.prepayment}, price: {self.price}"
+
+
+class TBank_Links(Base):
+    __tablename__ = 'tbanklinks'
+
+    id_link: Mapped[int] = mapped_column(primary_key=True)
+    percent: Mapped[int] = mapped_column()
+    link: Mapped[str] = mapped_column()
+
+    def __repr__(self) -> str:
+        ...
+        return f"Link: id: {self.id_link}, link: {self.link}"

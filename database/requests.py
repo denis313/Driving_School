@@ -6,14 +6,20 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from bot import bot
 from config import admin_id
-from database.model import Base, Users, Links
+from database.model import Base, Users, Links, Prices, TBank_Links
 from keyboards import keyboard_friend
 from lexicon import lexicon
 
 
 async def send_admin(status: bool):
     d = {True: 'Договоры для Совершеннолетних', False: 'Договоры для Несовершеннолетних'}
-    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+    await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=d[status]),
+                           reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+
+
+async def send_admin_2(percent: int):
+    await bot.send_message(chat_id=admin_id(), text=lexicon['new_tblinks'].format(percent=percent),
+                           reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
 
 
 class DatabaseManager:
@@ -122,3 +128,75 @@ class DatabaseManager:
             all_users = result.scalars()
             users = [user for user in all_users]
             return users
+
+        # get user
+    async def get_prices(self) -> Prices | None:
+        async with self.async_session() as session:
+            result = await session.execute(select(Prices).where(Prices.id_value == 1))
+            prices = result.scalar()
+            logging.debug(f'Get prices: {prices.prepayment}, {prices.price}')
+            return prices if prices else None
+
+    # update user
+    async def update_prices(self, new_prices) -> None:
+        async with self.async_session() as session:
+            stmt = update(Prices).where(Prices.id_value == 1).values(new_prices)
+            await session.execute(stmt)
+            await session.commit()
+            logging.debug(f'Update prices')
+
+    #add tbank link
+    async def add_tblink(self, link):
+        try:
+            async with self.async_session() as session:
+                new_links = TBank_Links(**link)
+                session.add(new_links)
+                await session.commit()
+                logging.debug('New link')
+        except SQLAlchemyError as e:
+            logging.error(f'Error occurred while adding user: {str(e)}')
+
+    # get tbank link
+    async def get_tblink(self, percent: int):
+        async with self.async_session() as session:
+            result = await session.execute(select(TBank_Links).where(TBank_Links.percent==percent))
+            link = result.scalar()
+            logging.debug('Get link')
+            if link:
+                return link
+            else:
+                await send_admin_2(percent=percent)
+                return None
+
+    # get link by id
+    # get tbank link
+    async def get_tblink_by_linkid(self, id_link: int):
+        async with self.async_session() as session:
+            result = await session.execute(select(TBank_Links).where(TBank_Links.id_link == id_link))
+            link = result.scalar()
+            logging.debug('Get link')
+            if link:
+                return link
+            else:
+                return None
+
+    # delete tbank link
+    async def delete_tblink(self, link_id):
+        async with self.async_session() as session:
+            stmt = delete(TBank_Links).where(TBank_Links.id_link == link_id)
+            await session.execute(stmt)
+            await session.commit()
+            logging.debug(f'Delete link by id={link_id}')
+
+    # get tbank links
+    async def get_tblinks(self, percent: int):
+        try:
+            async with self.async_session() as session:
+                result = await session.execute(select(TBank_Links).where(TBank_Links.percent == percent))
+                all_links = result.scalars()
+                links = [link for link in all_links]
+                return links
+        except SQLAlchemyError as e:
+            logging.error(f'Error occurred while adding user: {str(e)}')
+            await send_admin_2(percent)
+            return None

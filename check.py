@@ -31,7 +31,8 @@ async def check_pay():
                                  reply_markup=keyboard_parts())
             elif (end + timedelta(days=1)) <= now:
                 await bot.send_photo(photo=get_photo(name='buy'), chat_id=user.user_id, caption=lexicon['del_user'])
-                await bot.send_message(chat_id=admin_id(),
+                for user_id in admin_id():
+                    await bot.send_message(chat_id=user_id,
                                        text=lexicon['for_admin_4'].format(user_phone=user.phone))
                 await db_manager.delete_user(user_id=user.user_id)
                 logging.debug(f'Kick user by id={user.user_id}')
@@ -44,3 +45,14 @@ async def check_link():
         logging.debug(f'Check_link')
         if links == []:
             await bot.send_message(chat_id=admin_id(), text=lexicon['new_links'].format(button=item), reply_markup=keyboard_friend.as_markup(resize_keyboard=True))
+
+
+async def check_tblink():
+    d = [100, 50]
+    for i in d:
+        links = await db_manager.get_tblinks(percent=i)
+        logging.debug(f'Check_link')
+        if links == []:
+            await bot.send_message(chat_id=admin_id(), text=f'Закончились ссылки для сервиса Долями - {i}%\n'
+                                                            'Нажмите кнопку - "Добавить ссылки для Долей💸"')
+
